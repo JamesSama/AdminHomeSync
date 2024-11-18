@@ -1,0 +1,63 @@
+@page "/activity"
+@using AdminHomeSync.Components.Services
+@inject ActivityService ActivityService
+
+<PageTitle>Activity</PageTitle>
+
+<div class="activity-section">
+    <div class="activity-outer-box">
+        <h3>Activity</h3>
+
+        <div class="activity-page">
+            <div class="activity-table-box">
+                <div class="activity-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date • Time</th>
+                                <th>Name</th>
+                                <th>Role</th>
+                                <th>Action</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var activity in activities)
+                            {
+                                <tr>
+                                    <td>@activity.DateTime.ToString("MM/dd/yyyy • h:mm:ss tt")</td>
+                                    <td>@activity.UserName</td>
+                                    <td>@activity.Role</td>
+                                    <td>@activity.Action</td>
+                                    <td>@activity.Status</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<UserActivity> activities;
+
+    protected override void OnInitialized()
+    {
+        activities = ActivityService.GetActivities();
+
+        // Mock data; palitan pag may backend na
+        if (!activities.Any())
+        {
+            ActivityService.AddActivity(DateTime.Now, "Meow M. Meow", "Admin", "Logged In", "Success");
+            ActivityService.AddActivity(DateTime.Now, "Jobert", "User", "Logged Out", "Success");
+            ActivityService.AddActivity(DateTime.Now, "Bentong", "User", "New User", "Success");
+            ActivityService.AddActivity(DateTime.Now, "Meow M. Meow", "Admin", "Logged In", "Success");
+            ActivityService.AddActivity(DateTime.Now, "Jobert", "User", "Logged Out", "Success");
+            ActivityService.AddActivity(DateTime.Now, "Bentong", "User", "New User", "Success");
+
+            activities = ActivityService.GetActivities();
+        }
+    }
+}

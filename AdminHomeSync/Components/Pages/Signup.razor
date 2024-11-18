@@ -1,0 +1,59 @@
+﻿@page "/signup"
+
+<PageTitle>Admin Signup</PageTitle>
+
+<div class="signup-page">
+    <div class="left-section">
+        <div class="left-section-header">
+            <div class="glow">
+                <div class="logo-container">
+                    <img src="images/Logo_1 2.png" alt="HomeSync Logo" class="logo">
+                </div>
+            </div>
+            <p class="header-caption">Create an account.</p>
+        </div>
+        <img src="images/signup-web-illustration.png" alt="Login Illustration" class="illustration-image">
+    </div>
+
+    <div class="right-section">
+        <img src="images/signup-illustration 2.png" alt="Signup Top Image" class="signup-person">
+
+        <div class="signup-container">
+            <form>
+                <div class="input-group">
+                    <label for="first-name">First Name</label>
+                    <input type="text" id="first-name" placeholder="First Name" required>
+                </div>
+                <div class="input-group">
+                    <label for="middle-initial">Middle Initial</label>
+                    <input type="text" id="middle-initial" placeholder="Middle Initial" required>
+                </div>
+                <div class="input-group">
+                    <label for="last-name">Last Name</label>
+                    <input type="text" id="last-name" placeholder="Last Name" required>
+                </div>
+                <div class="input-group">
+                    <label for="sex">Sex</label>
+                    <select id="sex" required>
+                        <option value="" disabled selected>Sex</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="birthdate">Birthdate</label>
+                    <input type="date" id="birthdate" placeholder="Birthdate" required>
+                </div>
+                <div class="input-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" placeholder="Email Address" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+                <button type="submit" class="create-account-button">Create Account</button>
+            </form>
+        </div>
+    </div>
+</div>

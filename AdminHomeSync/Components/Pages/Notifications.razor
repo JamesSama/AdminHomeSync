@@ -1,0 +1,37 @@
+﻿@page "/notification"
+@using AdminHomeSync.Components.Services
+@using static AdminHomeSync.Components.Services.NotificationService
+@inject NotificationService NotificationService
+
+<PageTitle>Notifications</PageTitle>
+
+<div class="notification-page">
+    <div class="notif-container">
+        <p class="header">Notifications</p>
+        <div class="messages-container">
+            @if (notifications != null && notifications.Any())
+            {
+                @foreach (var notification in notifications)
+                {
+                    <div class="messages-box">
+                        <p class="message">@notification.Message</p>
+                        <p class="daydate">@notification.Date</p>
+                    </div>
+                }
+            }
+            else
+            {
+                <p>There's nothing in here...</p>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<NotificationItem>? notifications;
+
+    protected override void OnInitialized()
+    {
+        notifications = NotificationService.GetNotifications();
+    }
+}

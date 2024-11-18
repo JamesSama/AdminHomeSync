@@ -1,0 +1,103 @@
+﻿@page "/users"
+@using AdminHomeSync.Components.Services
+@inject IUserService UserService
+
+<PageTitle>Users</PageTitle>
+
+<div class="user-section">
+    <div class="user-outer-box">
+        <h3>Users</h3>
+
+        <div class="user-page">
+            <div class="top-row">
+                <div class="filter-options">
+                    <button @onclick="ShowAllUsers">All</button>
+                    <button @onclick="ShowUsers">Users</button>
+                    <button @onclick="ShowAdmins">Admin</button>
+                </div>
+
+                <div class="search-container">
+                    <div class="search-bar">
+                        <img class="search-icon" src="/icon/search.svg" alt="Search Icon" />
+                        <input type="text" @bind="searchTerm" @oninput="OnSearchInput" placeholder="Search" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="user-table-box">
+                <div class="user-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Users</th>
+                                <th>Role</th>
+                                <th>Devices</th>
+                                <th>Status</th>
+                                <th>Last Login</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var user in filteredUsers)
+                            {
+                                    <tr>
+                                        <td>@user.Id</td>
+                                        <td>@user.Name</td>
+                                        <td>@user.Role</td>
+                                        <td>@user.DevicesConnected</td>
+                                        <td>@user.Status</td>
+                                        <td>@user.LastLogin.ToString("MM/dd/yyyy • h:mm:ss tt")</td>
+                                        <td>@user.Actions</td>
+                                    </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<User> users = new List<User>();
+    private List<User> filteredUsers = new List<User>();
+    private string searchTerm = string.Empty;
+    private string roleFilter = "all";
+
+    protected override async Task OnInitializedAsync()
+    {
+        users = await UserService.GetUsersAsync();
+        filteredUsers = users;
+    }
+
+    private async Task OnSearchInput(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? string.Empty;
+        await FilterUsersAsync();
+    }
+
+    private async Task FilterUsersAsync()
+    {
+        filteredUsers = await UserService.SearchUsersAsync(searchTerm, roleFilter);
+        StateHasChanged();
+    }
+
+    private async Task ShowAllUsers()
+    {
+        roleFilter = "all";
+        await FilterUsersAsync();
+    }
+
+    private async Task ShowUsers()
+    {
+        roleFilter = "user";
+        await FilterUsersAsync();
+    }
+
+    private async Task ShowAdmins()
+    {
+        roleFilter = "admin";
+        await FilterUsersAsync();
+    }
+}

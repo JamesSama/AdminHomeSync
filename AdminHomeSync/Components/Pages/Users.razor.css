@@ -1,0 +1,332 @@
+﻿/* CSS for Users Page */
+
+@font-face {
+    font-family: 'Outfit-Medium';
+    src: url('fonts/outfit-medium.ttf') format('truetype');
+    font-weight: 500;
+}
+
+@font-face {
+    font-family: 'Outfit-SemiBold';
+    src: url('fonts/outfit-semibold.ttf') format('truetype');
+    font-weight: 600;
+}
+
+.user-section {
+    display: flex;
+    height: 100vh;
+    padding: 30px;
+}
+
+/* Main Box */
+.user-outer-box {
+    display: flex;
+    flex-direction: column;
+    background-color: #f3f3f3;
+    width: 100%;
+    padding: 4em;
+    border-radius: 30px;
+}
+
+/* Page layout container */
+.user-page {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Page title */
+.user-outer-box h3 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 36px;
+    font-weight: 600;
+    color: #46464B;
+    padding: 20px 20px 20px 0px;
+    margin: 0;
+}
+
+/* To align buttons and search bar */
+.top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+/* Buttons */
+.filter-options button {
+    margin-right: 10px;
+    padding: 10px 40px;
+    background-color: transparent;
+    color: #716B6B;
+    border-radius: 35px;
+    border: none;
+    font-size: 20px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.3s, border 0.3s;
+}
+
+    .filter-options button:hover {
+        color: #ccc;
+    }
+
+    .filter-options button:focus {
+        background-color: #FFFFFF;
+        outline: none;
+        border: 2px solid #ACACAC;
+        color: #46464B;
+    }
+
+    .filter-options button:active {
+        background-color: #FFFFFF;
+        color: #46464B;
+        border: 2px solid #ACACAC;
+    }
+
+/* Search bar */
+.search-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-grow: 1;
+    margin-left: 20px;
+}
+
+.search-bar {
+    position: relative;
+    width: 100%;
+    max-width: 300px;
+}
+
+/* Search bar Icon */
+.search-icon {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    pointer-events: none;
+}
+
+.search-bar input {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    font-size: 20px;
+    color: #46464B;
+    padding: 10px 10px 10px 40px; /* padding for icon */
+    width: 100%;
+    border-radius: 35px;
+    border: 2px solid #ACACAC;
+    box-sizing: border-box;
+}
+
+    .search-bar input:hover {
+        border-color: #0056b3;
+    }
+
+/* Box for Table */
+.user-table-box {
+    padding: 10px;
+    border-radius: 15px;
+    background-color: #FFFFFF;
+    margin-top: 20px;
+    max-height: 400px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Table style */
+.user-table {
+    background-color: #FFFFFF;
+    border-radius: 8px;
+    padding: 30px;
+    display: block;
+}
+
+    /* Table structure */
+    .user-table table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: auto;
+    }
+
+    /* Table Column width settings */
+    .user-table th:nth-child(1), .user-table td:nth-child(1) {
+        width: 10%;
+    }
+
+    .user-table th:nth-child(2), .user-table td:nth-child(2) {
+        width: 10%;
+    }
+
+    .user-table th:nth-child(3), .user-table td:nth-child(3) {
+        width: 7%;
+    }
+
+    .user-table th:nth-child(4), .user-table td:nth-child(4) {
+        width: 15%;
+        text-align: center;
+    }
+
+    .user-table th:nth-child(5), .user-table td:nth-child(5) {
+        width: 10%;
+    }
+
+    .user-table th:nth-child(6), .user-table td:nth-child(6) {
+        width: 23%;
+    }
+
+    .user-table th:nth-child(7), .user-table td:nth-child(7) {
+        width: 10%;
+    }
+
+    /* Header row style */
+    .user-table th {
+        font-family: 'Outfit', sans-serif;
+        font-size: 20px;
+        font-weight: 500;
+        color: #FDC755;
+        text-align: left;
+        padding: 12px 16px;
+    }
+
+    /* Borders for header row */
+    .user-table thead tr {
+        border-top: 2px solid #ACACAC;
+        border-bottom: 2px solid #ACACAC;
+    }
+
+
+    /* Table data cell styling */
+    .user-table td {
+        font-family: 'Outfit', sans-serif;
+        color: #716B6B;
+        font-size: 18px;
+        font-weight: 500;
+        text-align: left;
+        padding: 12px 16px;
+        white-space: nowrap;
+        overflow-x: auto;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+
+
+/* Media Queries for responsiveness */
+
+/* For tablets and medium screens */
+@media (max-width: 768px) {
+    .user-table-box {
+        padding: 10px;
+        margin: 0 auto;
+        overflow-x: auto; /* Enable horizontal scroll */
+    }
+
+    .user-table th, .user-table td {
+        font-size: 14px;
+        padding: 8px;
+    }
+
+        .user-table th:nth-child(1), .user-table td:nth-child(1) {
+            width: 25%;
+        }
+
+        .user-table th:nth-child(2), .user-table td:nth-child(2) {
+            width: 25%;
+        }
+
+        .user-table th:nth-child(3), .user-table td:nth-child(3) {
+            width: 20%;
+        }
+
+        .user-table th:nth-child(4), .user-table td:nth-child(4) {
+            width: 15%;
+        }
+
+        .user-table th:nth-child(5), .user-table td:nth-child(5) {
+            width: 15%;
+        }
+}
+
+/* Stack table layout for smaller mobile screens */
+@media (max-width: 480px) {
+    .user-table, .user-table thead, .user-table tbody, .user-table th, .user-table td, .user-table tr {
+        display: block; /* Stacks elements vertically */
+    }
+
+        .user-table tr {
+            margin-bottom: 10px;
+        }
+
+        .user-table td {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            font-size: 14px;
+            border: none;
+            text-align: left; /* Align text to the left for readability */
+        }
+
+            .user-table td::before {
+                content: attr(data-label);
+                font-weight: bold;
+                width: 40%;
+                color: #D2A01A;
+            }
+
+    .user-table-box {
+        overflow-x: auto; /* Allow horizontal scroll for small screens */
+    }
+
+    .user-table td {
+        min-width: 0;
+        max-width: none;
+    }
+
+    /* Hide the table headers on smaller screens */
+    .user-table th {
+        display: none;
+    }
+}
+
+/* Adjustments for tablets */
+@media (max-width: 1024px) {
+    .user-outer-box h3 {
+        font-size: 28px; /* Slightly smaller font size for titles */
+    }
+
+    .user-table th, .user-table td {
+        font-size: 16px; /* Adjust font size for tablets */
+        padding: 10px;
+    }
+
+        /* Adjust column widths for tablets */
+        .user-table th:nth-child(1), .user-table td:nth-child(1) {
+            width: 18%;
+        }
+
+        .user-table th:nth-child(2), .user-table td:nth-child(2) {
+            width: 18%;
+        }
+
+        .user-table th:nth-child(3), .user-table td:nth-child(3) {
+            width: 16%;
+        }
+
+        .user-table th:nth-child(4), .user-table td:nth-child(4) {
+            width: 16%;
+        }
+
+        .user-table th:nth-child(5), .user-table td:nth-child(5) {
+            width: 16%;
+        }
+
+        .user-table th:nth-child(6), .user-table td:nth-child(6) {
+            width: 16%;
+        }
+}

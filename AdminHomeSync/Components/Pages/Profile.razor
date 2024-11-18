@@ -1,0 +1,78 @@
+﻿@page "/profile"
+
+<PageTitle>Profile</PageTitle>
+
+<div class="profile-page">
+    <div class="profile-container">
+            <p class="top-header">Profile</p>
+            <div class="top-box">
+                <div class="top-box-left">
+                    <p class="top-name">@profile.Username</p>
+                    <p class="top-sub">Name</p>
+                </div>
+                <div class="top-box-right">
+                    <button href="/login" class="logout">
+                        <img src="icon/logout.svg" alt="Logout Logo" class="logout-icon" />
+                        Logout
+                    </button>
+                </div>
+            </div>
+            <div class="bottom-part">
+                <p class="bottom-header">Personal Information</p>
+                <div class="bottom-box">
+                    <div class="box-item">
+                        <div class="logo-container">
+                            <img src="icon/web-profile-birthdate.svg" alt="Birthdate Logo" class="birthdate-icon"/>
+                        </div>
+                        <div class="text-content">
+                        <p class="top-text">@profile.Birthdate.ToString("MMMM d, yyyy")</p>
+                            <p class="bot-text">Birthdate</p>
+                        </div>
+                    </div>
+                <div class="box-item">
+                    <div class="logo-container">
+                        <img src="icon/web-profile-sex.svg" alt="Sex Logo" class="sex-icon" />
+                    </div>
+                    <div class="text-content">
+                        <p class="top-text">@profile.Sex</p>
+                        <p class="bot-text">Sex</p>
+                    </div>
+                </div>
+                <div class="box-item">
+                    <div class="logo-container">
+                        <img src="icon/web-profile-email.svg" alt="Email Logo" class="email-icon" />
+                    </div>
+                    <div class="text-content">
+                        <p class="top-text">@profile.RegisteredEmail</p>
+                        <p class="bot-text">Email</p>
+                    </div>
+                </div>
+                 </div>
+            </div>
+    </div>
+</div>
+
+@code {
+    // User profile model
+    public class UserProfile
+    {
+        public string Username { get; set; }
+        public DateTime Birthdate { get; set; }
+        public string RegisteredEmail { get; set; }
+        public string Sex { get; set; }
+    }
+
+    private UserProfile profile = new();
+
+    protected override void OnInitialized()
+    {
+        // Initialize with sample data
+        profile = new UserProfile
+            {
+                Username = "Carlos James S. Defita",
+                Birthdate = new DateTime(2002, 7, 31),
+                RegisteredEmail = "cj31defita@gmail.com",
+                Sex = "Male"
+            };
+    }
+}

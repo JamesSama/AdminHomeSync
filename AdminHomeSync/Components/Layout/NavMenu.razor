@@ -1,0 +1,55 @@
+﻿<div class="top-row ps-3 navbar navbar-dark">
+    <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+</div>
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
+                <img src="icon/nav-dashboard.svg" alt="dashboard" class="nav-icon" /> Dashboard
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="users">
+                <img src="icon/nav-users.svg" alt="users" class="nav-icon" /> Users
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/devices">
+                <img src="icon/nav-devices.svg" alt="/devices" class="nav-icon" /> Devices
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/activity" Match="NavLinkMatch.All">
+                <img src="icon/nav-activity.svg" alt="activity" class="nav-icon" /> Activity
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/notification" Match="NavLinkMatch.All">
+                <img src="icon/nav-notification.svg" alt="notification" class="nav-icon" /> Notifications
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/profile" Match="NavLinkMatch.All">
+                <img src="icon/web-nav-profile.svg" alt="profile" class="nav-icon" /> Profile
+            </NavLink>
+        </div>
+
+    </nav>
+
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

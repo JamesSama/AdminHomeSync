@@ -1,0 +1,156 @@
+﻿@page "/"
+@using AdminHomeSync.Components.Services
+@inject IJSRuntime JS
+@inject IDeviceService DeviceService /*for calling connected devices*/
+@inject ActivityService ActivityService /*for logging activity list*/
+@using static AdminHomeSync.Components.Services.NotificationService
+@inject NotificationService NotificationService /*for logging notification messages [2/2]*/
+
+
+<PageTitle>Dashboard</PageTitle>
+
+<div class="dashboard-page">
+    <div class="dashcard">
+        <div class="dashtitle">
+            <strong>Welcome, {username}!</strong>
+            <p>@displayedDate</p>
+        </div>
+        <div class="grid-container">
+            <div class="column left-column">
+                <div class="box">
+                    <div class="box-header">
+                        <div class="header-left">
+                            <img src="icon/nav-activity.svg" alt="Activity Icon" class="icon-act" />
+                            <div>Recent Activity</div>
+                        </div>
+                        <a href="/activity" class="nav-link">See all</a>
+                    </div>
+                    <div class="box-content-container">
+                        @foreach (var activity in activities)
+                        {
+                        <div class="box-content">
+                            <p class="left-act">@activity.Action: @activity.UserName</p>
+                            <p>@displayedDate • @displayedTime</p>
+                        </div>
+                        }
+                    </div>
+                </div>
+                <div class="box">
+                    <div class="box-header">
+                        <div class="header-left">
+                            <img src="icon/nav-notification.svg" alt="Notification Icon" class="icon-notif" />
+                            <div>Notifications</div>
+                        </div>
+                        <a href="/notification" class="nav-link">See all</a>
+                    </div>
+                    <div class="box-content-container">
+                        @if (notifications != null && notifications.Any())
+                        {
+                            @foreach (var notification in notifications)
+                                {
+                                <div class="box-content">
+                                   <p class="left-notif">@notification.Message</p>
+                                   <p>@notification.Date</p>
+                                </div>
+                                }
+                            }
+                        else
+                        {
+                            <div class="no-notif-container">
+                                <p>No notifications to display...</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="column right-column">
+                <div class="box box3">
+                    <img src="images/dashboard-illustration 1.png" alt="Dashboard Image" />
+                </div>
+                <a class="buttons" href="/users">
+                <div class="box box4">
+                    <div class="leftboxes">
+                        <img src="icon/nav-users.svg" alt="Users Icon" class="icon-users" />
+                        Users
+                        </div>
+                    <div class="rightboxes">...</div>
+                </div>
+                </a>
+                <a class="buttons" href="/devices">
+                <div class="box box5">
+                    <div class="leftboxes">
+                        <img src="icon/nav-devices.svg" alt="Devices Icon" class="icon-devices" />
+                        Connected Devices
+                        </div>
+                    <div class="rightboxes">@connectedDevicesCount</div>
+                </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    private List<AdminHomeSync.Components.Services.UserDevice> userDevices = new
+    List<AdminHomeSync.Components.Services.UserDevice>();
+    private int connectedDevicesCount;
+    private List<UserActivity> activities;
+    private string displayedDate = string.Empty;
+    private string displayedTime = string.Empty;
+    private List<NotificationItem>? notifications;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (OperatingSystem.IsBrowser()) // WebAssembly (client-side)
+        {
+            // Fetch client (browser) date and time via JavaScript
+            await JS.InvokeVoidAsync("getCurrentDateTime", DotNetObjectReference.Create(this));
+        }
+        else // Blazor Server (server-side)
+        {
+            // Fetch server date and time separately
+            var now = DateTime.Now;
+            displayedDate = now.ToString("MMMM d, yyyy"); // Date format: "Month Day, Year"
+            displayedTime = now.ToString("hh:mm tt"); // Time format: "hh:mm:ss AM/PM"
+        }
+
+        {
+            // Fetch user devices
+            userDevices = await DeviceService.GetUserDevicesAsync();
+
+            // Calculate summary counts
+            connectedDevicesCount = userDevices.Sum(d => (d.Lights.IsConnected ? 1 : 0) + (d.Fan.IsConnected ? 1 : 0) +
+            (d.MotionSensor.IsConnected ? 1 : 0));
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        activities = ActivityService.GetActivities();
+
+        // Mock data; palitan pag may backend na
+        if (!activities.Any())
+        {
+            ActivityService.AddActivity(DateTime.Now, "Meow M. Meow", "Admin", "Logged In", "Success");
+            ActivityService.AddActivity(DateTime.Now, "Jobert Tenio Batumbakal", "User", "Logged Out", "Success");
+            ActivityService.AddActivity(DateTime.Now, "Bentong", "User", "New User", "Success");
+            ActivityService.AddActivity(DateTime.Now, "Meow M. Meow", "Admin", "Logged In", "Success");
+            ActivityService.AddActivity(DateTime.Now, "Jobert Tenio Batumbakal", "User", "Logged Out", "Success");
+            ActivityService.AddActivity(DateTime.Now, "Bentong", "User", "New User", "Success");
+
+            activities = ActivityService.GetActivities();
+        }
+
+        notifications = NotificationService.GetNotifications();
+    }
+
+
+
+    [JSInvokable]
+    public void UpdateClientDateTime(string date, string time)
+    {
+        displayedDate = date;
+        displayedTime = time;
+    }
+}

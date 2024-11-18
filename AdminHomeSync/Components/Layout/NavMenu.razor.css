@@ -1,0 +1,85 @@
+/* CSS FOR SIDEBAR BUTTONS */
+
+@font-face {
+    font-family: 'Outfit';
+    src: url('fonts/outfit-semibold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+}
+
+/* Sidebar button styling for small screens */
+.navbar-toggler {
+    background-color: rgba(255, 255, 255, 0.1); /* Semi-transparent background */
+}
+
+/* Brand name font size */
+.navbar-brand {
+    font-size: 1.1rem;
+}
+
+/* Styling for the navigation icon in the sidebar */
+.nav-icon {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    margin-right: 10px;
+}
+
+/* Styling for each navigation item */
+.nav-item {
+    font-size: 0.9rem;
+    padding-bottom: 0.5rem; /* Space below each item */
+}
+
+    /* Add extra space above the first navigation item */
+    .nav-item:first-of-type {
+        padding-top: 1rem;
+    }
+
+    /* Add extra space below the last navigation item */
+    .nav-item:last-of-type {
+        padding-bottom: 1rem;
+    }
+
+    /* Style for anchor tags inside nav items */
+    .nav-item ::deep a {
+        font-size: 20px;
+        font-weight: 600;
+        color: #46464B;
+        border-radius: 4px;
+        height: 3rem;
+        display: flex;
+        align-items: center;
+        line-height: 3rem;
+    }
+
+        /* Active state for clicked nav item */
+        .nav-item ::deep a.active {
+            width: 130%;
+            padding: 30px 20px;
+            background-color: #F3F3F3;
+            color: #46464B;
+            z-index: 1;
+            border-radius: 20px;
+        }
+
+        /* Hover state for nav item */
+        .nav-item ::deep a:hover {
+            width: 130%;
+            padding: 30px 20px;
+            background-color: rgba(243, 243, 243, 0.8);
+            color: #46464B;
+            z-index: 1;
+            border-radius: 20px;
+        }
+
+/* Media query for larger screens */
+@media (min-width: 641px) {
+    .navbar-toggler {
+        display: none; /* Hide sidebar toggle button on larger screens */
+    }
+
+    .collapse {
+        display: block; /* Always display sidebar for larger screens */
+    }
+}

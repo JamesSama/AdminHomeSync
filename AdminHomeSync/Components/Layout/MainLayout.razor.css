@@ -1,0 +1,94 @@
+/* CSS FOR SIDEBAR MENU */
+
+/* Page container: Flexbox layout for page content */
+.page {
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+}
+
+/* Main content area, takes up remaining space */
+main {
+    flex: 1;
+}
+
+/* Sidebar styling */
+.sidebar {
+    background-color: #E0D8C3;
+    display: flex;
+    flex-direction: column; /* Stack sidebar items vertically */
+    height: 100vh; /* Full height of the screen */
+}
+
+    /* Logo container styling */
+    .sidebar .logo {
+        margin-top: 60px;
+        padding: 20px 0;
+        text-align: center;
+        width: 100%;
+    }
+
+        /* Logo image styling */
+        .sidebar .logo img {
+            width: 125px !important;
+            height: auto !important;
+            max-width: 100%;
+        }
+
+    /* Bottom logo container styling */
+    .sidebar .bottom-logo {
+        margin-top: 150px !important;
+        padding: 20px 40px;
+        text-align: center;
+        width: 100%;
+    }
+
+        /* Bottom logo image styling */
+        .sidebar .bottom-logo img {
+            width: 200px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+/* Responsive design for wider screens */
+@media (min-width: 641px) {
+    /* Change page layout to row on larger screens */
+    .page {
+        flex-direction: row;
+    }
+
+    /* Sidebar fixed width and sticky position */
+    .sidebar {
+        width: 250px; /* Fixed width for sidebar */
+        height: 100vh; /* Full height of the screen */
+        position: sticky; /* Keep the sidebar in view */
+        top: 0; /* Stick to top */
+    }
+}
+
+/* Responsive design for smaller screen sizes */
+
+/* Adjust top logo for medium screens */
+@media (max-width: 768px) {
+    .sidebar .logo img {
+        width: 100px !important; /* Shrink logo size */
+    }
+
+    /* Adjust bottom logo for medium screens */
+    .sidebar .bottom-logo img {
+        width: 150px; /* Shrink bottom logo size */
+    }
+}
+
+/* Adjust logos for very small screens */
+@media (max-width: 480px) {
+    /* Further reduce top logo size */
+    .sidebar .logo img {
+        width: 80px !important; /* Further shrink logo size */
+    }
+
+    /* Further reduce bottom logo size */
+    .sidebar .bottom-logo img {
+        width: 120px; /* Further shrink bottom logo size */
+    }
+}

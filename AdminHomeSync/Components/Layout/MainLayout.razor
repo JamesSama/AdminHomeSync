@@ -1,0 +1,44 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+
+@* Check if the current URI ends with "/login" or "/signup" *@
+@{
+    bool isLoginPage = Navigation?.Uri.EndsWith("/login", StringComparison.OrdinalIgnoreCase) ?? false;
+    bool isSignupPage = Navigation?.Uri.EndsWith("/signup", StringComparison.OrdinalIgnoreCase) ?? false;
+    bool hideNavigation = isLoginPage || isSignupPage;
+}
+
+<style>
+    body {
+        background-color: #E0D8C3 !important;
+        /* Forcing body background */
+    }
+</style>
+
+<div class="page">
+    @if (!hideNavigation)
+    {
+        <!-- Sidebar Section -->
+        <div class="sidebar">
+
+            <div class="logo">
+                <img src="icon/logo.svg" alt="logo" />
+            </div>
+
+            <NavMenu />
+
+            <div class="bottom-logo">
+                <!-- Logo at the bottom -->
+                <img src="icon/nav-illustration.svg" alt="bottom Logo">
+            </div>
+
+        </div>
+    }
+
+    <!-- Main Content Section -->
+    <main class="main-content">
+        @Body
+    </main>
+
+
+</div>
