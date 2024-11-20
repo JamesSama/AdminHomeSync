@@ -1,144 +1,118 @@
-﻿namespace AdminHomeSync.Components.Services
+﻿using FirebaseAdmin.Auth;
+using Google.Apis.Auth.OAuth2;
+using Google.Cloud.Firestore; 
+using System.Collections.Generic;
+using System.Linq;
+using FirebaseAdmin;
+using System.Threading.Tasks;
+using Firebase.Database;
+using Firebase.Database.Query;
+
+
+
+namespace AdminHomeSync.Components.Services
 {
     public class UserService : IUserService
     {
-        private List<User> users;
-
+        private readonly FirebaseClient firebaseClient;
         public UserService()
         {
-            // Simulate fetching data, palitan later
-            users = new List<User>
-            {
-                new User
-                {
-                    Id = 1,
-                    Name = "Jobert Batumbakal",
-                    Role = "User",
-                    DevicesConnected = 2,
-                    Status = "Active",
-                    LastLogin = DateTime.Now.AddHours(-1),
-                    Actions = "Logged in"
-                },
-                new User
-                {
-                    Id = 2,
-                    Name = "Meow M. Meow",
-                    Role = "Admin",
-                    DevicesConnected = 5,
-                    Status = "Inactive",
-                    LastLogin = DateTime.Now.AddDays(-1),
-                    Actions = "Logged out"
-                },
-                new User
-                {
-                    Id = 3,
-                    Name = "Ed Caluag",
-                    Role = "Admin",
-                    DevicesConnected = 2,
-                    Status = "Inactive",
-                    LastLogin = DateTime.Now.AddDays(-1),
-                    Actions = "Logged out"
-                },
-                new User
-                {
-                    Id = 4,
-                    Name = "Arman",
-                    Role = "User",
-                    DevicesConnected = 1,
-                    Status = "Active",
-                    LastLogin = DateTime.Now.AddHours(-3),
-                    Actions = "New User"
-                },
-                new User
-                {
-                    Id = 5,
-                    Name = "Meow M. Meow",
-                    Role = "Admin",
-                    DevicesConnected = 5,
-                    Status = "Inactive",
-                    LastLogin = DateTime.Now.AddDays(-1),
-                    Actions = "Logged out"
-                },
-                new User
-                {
-                    Id = 6,
-                    Name = "Ed Caluag",
-                    Role = "Admin",
-                    DevicesConnected = 2,
-                    Status = "Inactive",
-                    LastLogin = DateTime.Now.AddDays(-1),
-                    Actions = "Logged out"
-                },
-                new User
-                {
-                    Id = 7,
-                    Name = "Arman",
-                    Role = "User",
-                    DevicesConnected = 1,
-                    Status = "Active",
-                    LastLogin = DateTime.Now.AddHours(-3),
-                    Actions = "New User"
-                }
-            };
+            firebaseClient = new FirebaseClient("https://homesync-3be92-default-rtdb.firebaseio.com/users");
+
         }
 
+        public async Task AddUserAsync(User user)
+            {
+                await firebaseClient
+                    .Child("users")
+                    .PostAsync(user);
+            }
         public async Task<List<User>> GetUsersAsync()
         {
-            // Simulate asynchronous data fetch
-            return await Task.FromResult(users);
+            var users = new List<User>();
+
+            // Fetch data from db
+            var userItems = await firebaseClient
+                .Child("users")
+                .OnceAsync<User>();
+
+            // Add fetched users to the list
+            foreach (var userItem in userItems)
+            {
+                users.Add(userItem.Object);
+            }
+
+            return users;
         }
 
         public async Task<User> GetUserByIdAsync(int userId)
         {
-            return await Task.FromResult(users.Find(u => u.Id == userId) ?? new User());
+            var userItems = await firebaseClient
+                .Child("users")
+                .OnceAsync<User>();
+
+            var user = userItems.FirstOrDefault(u => u.Object.UserId == userId.ToString());
+
+            return user?.Object;  // Use null-conditional operator
         }
 
         public async Task<bool> UpdateUserAsync(User updatedUser)
         {
-            // Simulate updating user details
-            var userIndex = users.FindIndex(u => u.Id == updatedUser.Id);
-            if (userIndex >= 0)
+            try
             {
-                users[userIndex] = updatedUser;
-                return await Task.FromResult(true);
+                // Update user in the 'users' node using their UserId as the key
+                await firebaseClient
+                    .Child("users")
+                    .Child(updatedUser.UserId)
+                    .PutAsync(updatedUser);
+                
+                return true;
             }
-            return await Task.FromResult(false);
+            catch
+            {
+                return false;
+            }
         }
 
         // For filtering users in search bar 
-        public async Task<List<User>> SearchUsersAsync(string searchTerm, string roleFilter)
+        public async Task<List<User>> SearchUsersAsync(string searchTerm)
         {
+            var users = await GetUsersAsync();
             var filteredUsers = users.AsQueryable();
 
-            // Filter by role if specified
-            if (!string.IsNullOrEmpty(roleFilter) && roleFilter != "all")
-            {
-                filteredUsers = filteredUsers.Where(u =>
-                    u.Role != null &&
-                    u.Role.Equals(roleFilter, StringComparison.OrdinalIgnoreCase));
-            }
+            // if (!string.IsNullOrEmpty(roleFilter) && roleFilter != "all")
+            // {
+            //     filteredUsers = filteredUsers.Where(u =>
+            //         u.Role != null 
+            //         // &&
+            //         u.Role.Equals(roleFilter, StringComparison.OrdinalIgnoreCase)
+            //         );
+            // }
 
-            // Filter by search term for both Name and Role
+         
             if (!string.IsNullOrEmpty(searchTerm))
             {
                 filteredUsers = filteredUsers.Where(u =>
-                    (u.Name != null && u.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
-                    (u.Role != null && u.Role.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-                );
+                !string.IsNullOrEmpty(u.Name) && u.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
             }
 
-            return await Task.FromResult(filteredUsers.ToList());
+            return filteredUsers.ToList();
         }
-
+        
     }
+
+
 
     public class User
     {
-        public int Id { get; set; }
-        public string? Name { get; set; }
+        public string? UserId { get; set; }
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+        public string? Name => $"{FirstName} {LastName}";
         public string? Role { get; set; }
         public int DevicesConnected { get; set; }
         public string? Status { get; set; }
+        public string? Sex { get; set; }
         public DateTime LastLogin { get; set; }
         public string? Actions { get; set; }
     }
@@ -149,6 +123,6 @@
         Task<List<User>> GetUsersAsync();
         Task<User> GetUserByIdAsync(int userId);
         Task<bool> UpdateUserAsync(User updatedUser);
-        Task<List<User>> SearchUsersAsync(string searchTerm, string roleFilter);  // New search method
+        Task<List<User>> SearchUsersAsync(string searchTerm);  // New search method
     }
 }

@@ -10,11 +10,20 @@
     <link rel="stylesheet" href="AdminHomeSync.styles.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <HeadOutlet />
+     <!-- Firebase App (Core) SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js"></script>
+    <!-- Firestore SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore.js"></script>
+    <script src="firebaseInterop.js"></script>
+    
 </head>
 
 <body>
     <Routes />
     <script src="_framework/blazor.web.js"></script>
+    <script>
+        initializeFirebase(); // Initialize Firebase on app load
+    </script>
 </body>
 
 </html>

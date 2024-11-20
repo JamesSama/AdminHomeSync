@@ -42,7 +42,7 @@
                             @foreach (var user in filteredUsers)
                             {
                                     <tr>
-                                        <td>@user.Id</td>
+                                        <td>@user.UserId</td>
                                         <td>@user.Name</td>
                                         <td>@user.Role</td>
                                         <td>@user.DevicesConnected</td>
@@ -79,7 +79,7 @@
 
     private async Task FilterUsersAsync()
     {
-        filteredUsers = await UserService.SearchUsersAsync(searchTerm, roleFilter);
+        filteredUsers = await UserService.SearchUsersAsync(searchTerm);
         StateHasChanged();
     }
 
