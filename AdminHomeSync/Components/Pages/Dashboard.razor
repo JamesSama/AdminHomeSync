@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using AdminHomeSync.Components.Services
 @inject IJSRuntime JS
+@inject IUserService UserService
 @inject IDeviceService DeviceService /*for calling connected devices*/
 @inject ActivityService ActivityService /*for logging activity list*/
 @using static AdminHomeSync.Components.Services.NotificationService
@@ -12,7 +13,7 @@
 <div class="dashboard-page">
     <div class="dashcard">
         <div class="dashtitle">
-            <strong>Welcome, {username}!</strong>
+            <strong>Welcome, Admin {username}!</strong>
             <p>@displayedDate</p>
         </div>
         <div class="grid-container">
@@ -28,10 +29,10 @@
                     <div class="box-content-container">
                         @foreach (var activity in activities)
                         {
-                        <div class="box-content">
-                            <p class="left-act">@activity.Action: @activity.UserName</p>
-                            <p>@displayedDate • @displayedTime</p>
-                        </div>
+                            <div class="box-content">
+                                <p class="left-act">@activity.Action: @activity.UserName</p>
+                                <p>@displayedDate • @displayedTime</p>
+                            </div>
                         }
                     </div>
                 </div>
@@ -47,13 +48,13 @@
                         @if (notifications != null && notifications.Any())
                         {
                             @foreach (var notification in notifications)
-                                {
+                            {
                                 <div class="box-content">
-                                   <p class="left-notif">@notification.Message</p>
-                                   <p>@notification.Date</p>
+                                    <p class="left-notif">@notification.Message</p>
+                                    <p>@notification.Date</p>
                                 </div>
-                                }
                             }
+                        }
                         else
                         {
                             <div class="no-notif-container">
@@ -68,22 +69,22 @@
                     <img src="images/dashboard-illustration 1.png" alt="Dashboard Image" />
                 </div>
                 <a class="buttons" href="/users">
-                <div class="box box4">
-                    <div class="leftboxes">
-                        <img src="icon/nav-users.svg" alt="Users Icon" class="icon-users" />
-                        Users
+                    <div class="box box4">
+                        <div class="leftboxes">
+                            <img src="icon/nav-users.svg" alt="Users Icon" class="icon-users" />
+                            Users
                         </div>
-                    <div class="rightboxes">...</div>
-                </div>
+                        <div class="rightboxes">@(summation?.TotalUsers ?? 0)</div>
+                    </div>
                 </a>
                 <a class="buttons" href="/devices">
-                <div class="box box5">
-                    <div class="leftboxes">
-                        <img src="icon/nav-devices.svg" alt="Devices Icon" class="icon-devices" />
-                        Connected Devices
+                    <div class="box box5">
+                        <div class="leftboxes">
+                            <img src="icon/nav-devices.svg" alt="Devices Icon" class="icon-devices" />
+                            Connected Devices
                         </div>
-                    <div class="rightboxes">@connectedDevicesCount</div>
-                </div>
+                        <div class="rightboxes">@connectedDevicesCount</div>
+                    </div>
                 </a>
             </div>
         </div>
@@ -94,6 +95,7 @@
 @code {
     private List<AdminHomeSync.Components.Services.UserDevice> userDevices = new
     List<AdminHomeSync.Components.Services.UserDevice>();
+    private UserSummation? summation;
     private int connectedDevicesCount;
     private List<UserActivity> activities;
     private string displayedDate = string.Empty;
@@ -113,6 +115,15 @@
             var now = DateTime.Now;
             displayedDate = now.ToString("MMMM d, yyyy"); // Date format: "Month Day, Year"
             displayedTime = now.ToString("hh:mm tt"); // Time format: "hh:mm:ss AM/PM"
+        }
+
+        try
+        {
+            summation = await UserService.GetUserSummationAsync();
+        }
+        catch (Exception)
+        {
+            summation = null;
         }
 
         {

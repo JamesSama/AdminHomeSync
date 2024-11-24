@@ -1,6 +1,8 @@
 ﻿@page "/users"
 @using AdminHomeSync.Components.Services
 @inject IUserService UserService
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
 
 <PageTitle>Users</PageTitle>
 
@@ -24,35 +26,39 @@
                 </div>
             </div>
 
-            <div class="user-table-box">
-                <div class="user-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Users</th>
-                                <th>Role</th>
-                                <th>Devices</th>
-                                <th>Status</th>
-                                <th>Last Login</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var user in filteredUsers)
-                            {
+            <div class="table-main-container">
+                <div class="user-table-box">
+                    <div class="user-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Users</th>
+                                    <th>Role</th>
+                                    <th>Last Login</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var user in filteredUsers)
+                                {
                                     <tr>
-                                        <td>@user.UserId</td>
+                                        <td>@user.SequentialId</td>
                                         <td>@user.Name</td>
                                         <td>@user.Role</td>
-                                        <td>@user.DevicesConnected</td>
-                                        <td>@user.Status</td>
-                                        <td>@user.LastLogin.ToString("MM/dd/yyyy • h:mm:ss tt")</td>
-                                        <td>@user.Actions</td>
+                                        <td>@latestLoginDictionary.GetValueOrDefault(user.UserId, "Loading...")</td>
+                                        <td>
+                                            @if (user.Role == "User")
+                                            {
+                                                <button class="delete-button" @onclick="() => DeleteUser(user.UserId)">Delete
+                                                    User</button>
+                                            }
+                                        </td>
                                     </tr>
-                            }
-                        </tbody>
-                    </table>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -63,12 +69,21 @@
     private List<User> users = new List<User>();
     private List<User> filteredUsers = new List<User>();
     private string searchTerm = string.Empty;
-    private string roleFilter = "all";
+    private string roleFilter = "all"; // Default to "all", show all users
+    private Dictionary<string?, string> latestLoginDictionary = new Dictionary<string, string>();
 
     protected override async Task OnInitializedAsync()
     {
+        // Load all users when the page is initialized
         users = await UserService.GetUsersAsync();
         filteredUsers = users;
+
+        // Fetch the latest login for each user
+        foreach (var user in users)
+        {
+            var latestLogin = await UserService.GetLatestLoginForUserAsync(user.UserId);
+            latestLoginDictionary[user.UserId] = latestLogin;
+        }
     }
 
     private async Task OnSearchInput(ChangeEventArgs e)
@@ -79,25 +94,66 @@
 
     private async Task FilterUsersAsync()
     {
-        filteredUsers = await UserService.SearchUsersAsync(searchTerm);
+        // Apply both search term and role filter
+        var filteredByRole = roleFilter == "all"
+        ? users
+        : users.Where(u => u.Role.Equals(roleFilter, StringComparison.OrdinalIgnoreCase)).ToList();
+
+        // Apply search filter if search term is not empty
+        if (!string.IsNullOrEmpty(searchTerm))
+        {
+            filteredByRole = filteredByRole.Where(u => u.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+
+        filteredUsers = filteredByRole;
         StateHasChanged();
     }
 
     private async Task ShowAllUsers()
     {
-        roleFilter = "all";
+        roleFilter = "all"; // Reset to all users
         await FilterUsersAsync();
     }
 
     private async Task ShowUsers()
     {
-        roleFilter = "user";
+        roleFilter = "User"; // Filter only regular users
         await FilterUsersAsync();
     }
 
     private async Task ShowAdmins()
     {
-        roleFilter = "admin";
+        roleFilter = "Admin"; // Filter only admins
         await FilterUsersAsync();
+    }
+
+    private async Task DeleteUser(string userId)
+    {
+        var userToDelete = users.FirstOrDefault(u => u.UserId == userId);
+
+        if (userToDelete != null)
+        {
+            // Use JavaScript interop to confirm deletion with the user's name
+            var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete {userToDelete.Name}?");
+
+            if (confirmed)
+            {
+                // Proceed with deletion if confirmed
+                var success = await UserService.DeleteUserAsync(userId);
+                if (success)
+                {
+                    // Show success message in alert
+                    await JSRuntime.InvokeVoidAsync("alert", $"User {userToDelete.Name} deleted successfully.");
+                    users = await UserService.GetUsersAsync(); // Refresh users after deletion
+                    filteredUsers = users;
+                    await FilterUsersAsync(); // Reapply the current filters after deletion
+                }
+                else
+                {
+                    // Show failure message in alert
+                    await JSRuntime.InvokeVoidAsync("alert", $"Error deleting user {userToDelete.Name}. Please try again.");
+                }
+            }
+        }
     }
 }
