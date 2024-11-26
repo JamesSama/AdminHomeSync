@@ -42,7 +42,7 @@
     font-size: 36px;
     font-weight: 600;
     color: #46464B;
-    padding: 20px 20px 20px 0px; /* Padding around the title */
+    padding: 20px 20px 20px 0px; 
 }
 
 /* Box for Table */
@@ -54,9 +54,9 @@
     max-height: 400px;
     flex-grow: 1;
     display: flex;
-    flex-direction: column; /* Stack content vertically */
-    overflow-y: auto; /* Vertical scroll if content overflows */
-    overflow-x: hidden; /* No horizontal scroll */
+    flex-direction: column; 
+    overflow-y: auto; 
+    overflow-x: hidden; 
 }
 
 /* Table style */
@@ -70,28 +70,28 @@
     /* Table structure */
     .activity-table table {
         width: 100%; /* Full width */
-        border-collapse: collapse; /* Remove gaps between cells */
+        border-collapse: collapse; 
     }
 
     /* Column width settings */
     .activity-table th:nth-child(1), .activity-table td:nth-child(1) {
-        width: 30%; /* Adjust first column width */
+        width: 30%; 
     }
 
     .activity-table th:nth-child(2), .activity-table td:nth-child(2) {
-        width: 20%; /* Adjust second column width */
+        width: 20%; 
     }
 
     .activity-table th:nth-child(3), .activity-table td:nth-child(3) {
-        width: 15%; /* Adjust third column width */
+        width: 15%;
     }
 
     .activity-table th:nth-child(4), .activity-table td:nth-child(4) {
-        width: 20%; /* Adjust fourth column width */
+        width: 20%; 
     }
 
     .activity-table th:nth-child(5), .activity-table td:nth-child(5) {
-        width: 10%; /* Adjust fifth column width */
+        width: 10%; 
     }
 
     /* Header row style */
@@ -118,103 +118,9 @@
         font-weight: 500;
         text-align: left;
         padding: 12px 16px;
-        white-space: nowrap; /* Prevent text from wrapping */
-        overflow: hidden; /* Hide overflow if text is too long */
-        text-overflow: ellipsis; /* Add "..." to indicate overflowing text */
+        white-space: nowrap; 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
     }
 
-/* Media Queries for responsiveness */
 
-/* For smaller screens, allow horizontal scrolling */
-@media (max-width: 768px) {
-    .activity-table-box {
-        padding: 10px;
-        margin: 0 auto;
-        overflow-x: auto; /* Allow horizontal scroll */
-    }
-
-    .activity-table th, .activity-table td {
-        font-size: 14px;
-        padding: 8px;
-    }
-
-        /* Adjust column widths for smaller screens */
-        .activity-table th:nth-child(1), .activity-table td:nth-child(1) {
-            width: 40%;
-        }
-
-        .activity-table th:nth-child(2), .activity-table td:nth-child(2) {
-            width: 25%;
-        }
-
-        .activity-table th:nth-child(3), .activity-table td:nth-child(3) {
-            width: 15%;
-        }
-
-        .activity-table th:nth-child(4), .activity-table td:nth-child(4) {
-            width: 15%;
-        }
-
-        .activity-table th:nth-child(5), .activity-table td:nth-child(5) {
-            width: 10%;
-        }
-}
-
-/* Stack table layout for mobile screens */
-@media (max-width: 480px) {
-    .activity-table, .activity-table thead, .activity-table tbody, .activity-table th, .activity-table td, .activity-table tr {
-        display: block; /* Stack elements vertically */
-    }
-
-        .activity-table tr {
-            margin-bottom: 10px; /* Space between rows */
-        }
-
-        .activity-table td {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 5px;
-            font-size: 14px;
-            border: none; /* Optional: remove borders */
-        }
-
-            .activity-table td::before {
-                content: attr(data-label); /* Show label from data-* attribute */
-                font-weight: bold;
-                width: 50%; /* Adjust label width */
-                color: #D2A01A; /* Label color */
-            }
-}
-
-/* Adjustments for tablets */
-@media (max-width: 1024px) {
-    .activity-page h3 {
-        font-size: 28px; /* Slightly smaller title font */
-    }
-
-    .activity-table th, .activity-table td {
-        font-size: 16px; /* Adjust font size for tablets */
-        padding: 10px; /* Adjust padding */
-    }
-
-        /* Adjust column widths for tablets */
-        .activity-table th:nth-child(1), .activity-table td:nth-child(1) {
-            width: 35%;
-        }
-
-        .activity-table th:nth-child(2), .activity-table td:nth-child(2) {
-            width: 25%;
-        }
-
-        .activity-table th:nth-child(3), .activity-table td:nth-child(3) {
-            width: 20%;
-        }
-
-        .activity-table th:nth-child(4), .activity-table td:nth-child(4) {
-            width: 15%;
-        }
-
-        .activity-table th:nth-child(5), .activity-table td:nth-child(5) {
-            width: 10%;
-        }
-}

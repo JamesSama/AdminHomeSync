@@ -2,11 +2,10 @@
 @using AdminHomeSync.Components.Services
 @inject IJSRuntime JS
 @inject IUserService UserService
-@inject IDeviceService DeviceService /*for calling connected devices*/
-@inject ActivityService ActivityService /*for logging activity list*/
+@inject DeviceService DeviceService /*for calling connected devices*/
+@inject NotificationService NotificationService /*for logging notification messages*/
 @using static AdminHomeSync.Components.Services.NotificationService
-@inject NotificationService NotificationService /*for logging notification messages [2/2]*/
-
+@inject NavigationManager NavigationManager /*REMOVE LATER*/
 
 <PageTitle>Dashboard</PageTitle>
 
@@ -31,7 +30,7 @@
                         {
                             <div class="box-content">
                                 <p class="left-act">@activity.Action: @activity.UserName</p>
-                                <p>@displayedDate • @displayedTime</p>
+                                <p>@activity.Date.ToString("MMMM d, yyyy • hh:mm tt")</p> <!-- Format DateTime -->
                             </div>
                         }
                     </div>
@@ -91,16 +90,16 @@
     </div>
 </div>
 
-
 @code {
-    private List<AdminHomeSync.Components.Services.UserDevice> userDevices = new
-    List<AdminHomeSync.Components.Services.UserDevice>();
-    private UserSummation? summation;
+    private List<AdminHomeSync.Components.Services.UserDevice> userDevices = new List<AdminHomeSync.Components.Services.UserDevice>();
+    private UserSummation? summation; 
     private int connectedDevicesCount;
-    private List<UserActivity> activities;
+    private List<UserActivity> activities = new List<UserActivity>(); //REMOVE LATER, Initialize with mock data
     private string displayedDate = string.Empty;
     private string displayedTime = string.Empty;
     private List<NotificationItem>? notifications;
+
+    private bool isDashboardPage; /*REMOVE LATER*/
 
     protected override async Task OnInitializedAsync()
     {
@@ -117,6 +116,8 @@
             displayedTime = now.ToString("hh:mm tt"); // Time format: "hh:mm:ss AM/PM"
         }
 
+        isDashboardPage = NavigationManager.Uri.Contains("/");/*REMOVE LATER*/
+
         try
         {
             summation = await UserService.GetUserSummationAsync();
@@ -126,37 +127,29 @@
             summation = null;
         }
 
+        if (!isDashboardPage)
         {
-            // Fetch user devices
-            userDevices = await DeviceService.GetUserDevicesAsync();
+            // Fetch devices data from DeviceService
+            userDevices = await DeviceService.GetDevicesDataAsync();
 
             // Calculate summary counts
             connectedDevicesCount = userDevices.Sum(d => (d.Lights.IsConnected ? 1 : 0) + (d.Fan.IsConnected ? 1 : 0) +
             (d.MotionSensor.IsConnected ? 1 : 0));
         }
-    }
 
-    protected override void OnInitialized()
-    {
-        activities = ActivityService.GetActivities();
-
-        // Mock data; palitan pag may backend na
-        if (!activities.Any())
+        // Mock activity data directly in OnInitializedAsync
+        activities = new List<UserActivity>
         {
-            ActivityService.AddActivity(DateTime.Now, "Meow M. Meow", "Admin", "Logged In", "Success");
-            ActivityService.AddActivity(DateTime.Now, "Jobert Tenio Batumbakal", "User", "Logged Out", "Success");
-            ActivityService.AddActivity(DateTime.Now, "Bentong", "User", "New User", "Success");
-            ActivityService.AddActivity(DateTime.Now, "Meow M. Meow", "Admin", "Logged In", "Success");
-            ActivityService.AddActivity(DateTime.Now, "Jobert Tenio Batumbakal", "User", "Logged Out", "Success");
-            ActivityService.AddActivity(DateTime.Now, "Bentong", "User", "New User", "Success");
-
-            activities = ActivityService.GetActivities();
-        }
+            new UserActivity("Meow M. Meow", "Admin", "Logged In", "Success", DateTime.Now),
+            new UserActivity("Jobert Tenio Batumbakal", "User", "Logged Out", "Success", DateTime.Now),
+            new UserActivity("Bentong", "User", "New User", "Success", DateTime.Now),
+            new UserActivity("Meow M. Meow", "Admin", "Logged In", "Success", DateTime.Now),
+            new UserActivity("Jobert Tenio Batumbakal", "User", "Logged Out", "Success", DateTime.Now),
+            new UserActivity("Bentong", "User", "New User", "Success", DateTime.Now)
+        };
 
         notifications = NotificationService.GetNotifications();
     }
-
-
 
     [JSInvokable]
     public void UpdateClientDateTime(string date, string time)
@@ -164,4 +157,27 @@
         displayedDate = date;
         displayedTime = time;
     }
+
+
+    /*REMOVE LATER, pang mock data lang*/
+    public class UserActivity
+    {
+        public string UserName { get; }
+        public string Role { get; }
+        public string Action { get; }
+        public string Status { get; }
+        public DateTime Date { get; }
+
+        // Constructor
+        public UserActivity(string userName, string role, string action, string status, DateTime date)
+        {
+            UserName = userName;
+            Role = role;
+            Action = action;
+            Status = status;
+            Date = date;
+        }
+    }
+
 }
+

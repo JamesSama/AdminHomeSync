@@ -9,12 +9,19 @@
         <h3>Activity</h3>
 
         <div class="activity-page">
+
+            <!-- Error Message above the table -->
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert alert-danger">@ErrorMessage</div>
+            }
+
             <div class="activity-table-box">
                 <div class="activity-table">
                     <table>
                         <thead>
                             <tr>
-                                <th>Date â€¢ Time</th>
+                                <th>Date • Time</th>
                                 <th>Name</th>
                                 <th>Role</th>
                                 <th>Action</th>
@@ -22,15 +29,26 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var activity in activities)
+                            @if (activities == null || !activities.Any())
                             {
-                                <tr>
-                                    <td>@activity.DateTime.ToString("MM/dd/yyyy â€¢ h:mm:ss tt")</td>
-                                    <td>@activity.UserName</td>
-                                    <td>@activity.Role</td>
-                                    <td>@activity.Action</td>
-                                    <td>@activity.Status</td>
+                                <tr class="warning-row">
+                                    <td colspan="5">
+                                        <div class="alert alert-warning">No Activities Found.</div>
+                                    </td>
                                 </tr>
+                            }
+                            else
+                            {
+                                @foreach (var activity in activities)
+                                {
+                                    <tr>
+                                        <td>@activity.DateTime.ToString("MM/dd/yyyy • h:mm:ss tt")</td>
+                                        <td>@activity.UserName</td>
+                                        <td>@activity.Role</td>
+                                        <td>@activity.Action</td>
+                                        <td>@activity.Status</td>
+                                    </tr>
+                                }
                             }
                         </tbody>
                     </table>
@@ -41,23 +59,22 @@
 </div>
 
 @code {
-    private List<UserActivity> activities;
+    private List<UserActivity> activities = new List<UserActivity>();
+    private string ErrorMessage;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        activities = ActivityService.GetActivities();
-
-        // Mock data; palitan pag may backend na
-        if (!activities.Any())
+        try
         {
-            ActivityService.AddActivity(DateTime.Now, "Meow M. Meow", "Admin", "Logged In", "Success");
-            ActivityService.AddActivity(DateTime.Now, "Jobert", "User", "Logged Out", "Success");
-            ActivityService.AddActivity(DateTime.Now, "Bentong", "User", "New User", "Success");
-            ActivityService.AddActivity(DateTime.Now, "Meow M. Meow", "Admin", "Logged In", "Success");
-            ActivityService.AddActivity(DateTime.Now, "Jobert", "User", "Logged Out", "Success");
-            ActivityService.AddActivity(DateTime.Now, "Bentong", "User", "New User", "Success");
-
-            activities = ActivityService.GetActivities();
+            // Fetch activities from the ActivityService
+            activities = await ActivityService.FetchActivitiesFromFirebase();
+        }
+        catch (Exception ex)
+        {
+            // Log the error and display a user-friendly message
+            Console.WriteLine($"Error loading activities: {ex.Message}");
+            ErrorMessage = "Something went wrong while loading the activities. Please try again later.";
         }
     }
 }
+

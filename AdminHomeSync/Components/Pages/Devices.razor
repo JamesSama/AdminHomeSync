@@ -1,7 +1,7 @@
 @page "/devices"
 @using AdminHomeSync.Components.Services
-@using Microsoft.AspNetCore.Components
-@inject IDeviceService DeviceService
+
+@inject DeviceService DeviceService
 
 <PageTitle>Devices</PageTitle>
 
@@ -10,28 +10,25 @@
         <h3>Devices</h3>
 
         <div class="devices-page">
-            <!-- Ung 2 Box sa taas-->
+
+            <!-- Error message displayed above the table -->
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert alert-danger">@ErrorMessage</div>
+            }
+
             <div class="devices-summary-row">
-
-
                 <div class="devices-summary-box">
-
                     <img src="icon/arduino.svg" alt="arduino" class="icon" />
                     <h4>Total Arduinos</h4>
                     <p>@arduinoDevicesCount</p>
-
                 </div>
 
-
                 <div class="devices-summary-box">
-
                     <img src="icon/nav-devices.svg" alt="devices" class="icon" />
                     <h4>Connected Devices</h4>
                     <p>@connectedDevicesCount</p>
-
                 </div>
-
-
             </div>
 
             <div class="device-content-container">
@@ -40,32 +37,36 @@
                         <p>#</p>
                         <p>Owner</p>
                         <p>Device Type</p>
-                        <p>Pin</p>
                         <p>Status</p>
                     </div>
-
                     <div class="content-container">
-                        @foreach (var userDevice in userDevices)
+                       
+                        @if (userDevices == null || !userDevices.Any())
                         {
-                            <div class="list-box">
-                                <p class="contents-id">@userDevice.Id</p>
-                                <p class="contents-owner">@userDevice.Name</p>
-                                <div class="contents-dev">
-                                    <p>@userDevice.Lights.Name</p>
-                                    <p>@userDevice.Fan.Name</p>
-                                    <p>@userDevice.MotionSensor.Name</p>
-                                </div>
-                                <div class="contents-pin">
-                                    <p>@($"D{userDevice.Lights.Pin}")</p>
-                                    <p>@($"D{userDevice.Fan.Pin}")</p>
-                                    <p>@($"D{userDevice.MotionSensor.Pin}")</p>
-                                </div>
-                                <div class="contents-stat">
-                                    <p>@(userDevice.Lights.IsConnected ? "Connected" : "Disconnected")</p>
-                                    <p>@(userDevice.Fan.IsConnected ? "Connected" : "Disconnected")</p>
-                                    <p>@(userDevice.MotionSensor.IsConnected ? "Connected" : "Disconnected")</p>
-                                </div>
+                            <div class="alert alert-warning full-width-warning">
+                                No Device Data Found.
                             </div>
+                        }
+                        else
+                        {
+                            @foreach (var item in userDevices.Select((device, i) => new { device, i }))
+                            {
+                                <div class="list-box">
+                                    <p class="contents-id">@((item.i + 1))</p>
+                                    <p class="contents-owner">@item.device.Name</p>
+
+                                    <div class="contents-dev">
+                                        <p>@item.device.Lights.Name</p>
+                                        <p>@item.device.Fan.Name</p>
+                                        <p>@item.device.MotionSensor.Name</p>
+                                    </div>
+                                    <div class="contents-stat">
+                                        <p>@(item.device.Lights.IsConnected ? "Connected" : "Disconnected")</p>
+                                        <p>@(item.device.Fan.IsConnected ? "Connected" : "Disconnected")</p>
+                                        <p>@(item.device.MotionSensor.IsConnected ? "Connected" : "Disconnected")</p>
+                                    </div>
+                                </div>
+                            }
                         }
                     </div>
                 </div>
@@ -75,20 +76,28 @@
 </div>
 
 @code {
-    private List<AdminHomeSync.Components.Services.UserDevice> userDevices = new
-    List<AdminHomeSync.Components.Services.UserDevice>();
+    private List<UserDevice> userDevices = new List<UserDevice>();
     private int connectedDevicesCount;
     private int arduinoDevicesCount;
+    private string ErrorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        // Fetch user devices
-        userDevices = await DeviceService.GetUserDevicesAsync();
+        try
+        {
+            // Fetch devices data from DeviceService
+            userDevices = await DeviceService.GetDevicesDataAsync();
 
-        // Calculate summary counts
-        connectedDevicesCount = userDevices.Sum(d => (d.Lights.IsConnected ? 1 : 0) + (d.Fan.IsConnected ? 1 : 0) +
-        (d.MotionSensor.IsConnected ? 1 : 0));
-        arduinoDevicesCount = userDevices.Count(d => d.Lights.Type == "Arduino" || d.Fan.Type == "Arduino" ||
-        d.MotionSensor.Type == "Arduino");
+            // Calculate summary counts
+            connectedDevicesCount = userDevices.Sum(d => (d.Lights.IsConnected ? 1 : 0) + (d.Fan.IsConnected ? 1 : 0) +
+            (d.MotionSensor.IsConnected ? 1 : 0));
+            arduinoDevicesCount = userDevices.Count(d => d.Lights.Type == "Arduino" || d.Fan.Type == "Arduino" ||
+            d.MotionSensor.Type == "Arduino");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading device data: {ex.Message}");
+            ErrorMessage = "Something went wrong while loading the devices. Please try again later.";
+        }
     }
 }
