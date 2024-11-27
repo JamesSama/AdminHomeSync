@@ -11,6 +11,9 @@ builder.Services.AddSingleton<ActivityService>(); //activity page
 builder.Services.AddScoped<DeviceService>(); //device page
 builder.Services.AddScoped<IUserService, UserService>(); //users page
 builder.Services.AddSingleton<NotificationService>(); //notification page
+builder.Services.AddScoped<FirebaseAuthService>(); //signup page
+builder.Services.AddHttpClient(); //signup page
+
 
 
 var app = builder.Build();

@@ -1,4 +1,7 @@
 ﻿@page "/signup"
+@inject FirebaseAuthService AuthService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
 
 <PageTitle>Admin Signup</PageTitle>
 
@@ -19,22 +22,22 @@
         <img src="images/signup-illustration 2.png" alt="Signup Top Image" class="signup-person">
 
         <div class="signup-container">
-            <form>
+            <form @onsubmit="HandleSignUp">
                 <div class="input-group">
                     <label for="first-name">First Name</label>
-                    <input type="text" id="first-name" placeholder="First Name" required>
+                    <input type="text" id="first-name" @bind="FirstName" placeholder="First Name" required>
                 </div>
                 <div class="input-group">
                     <label for="middle-initial">Middle Initial</label>
-                    <input type="text" id="middle-initial" placeholder="Middle Initial" required>
+                    <input type="text" id="middle-initial" @bind="MiddleInitial" placeholder="Middle Initial" required>
                 </div>
                 <div class="input-group">
                     <label for="last-name">Last Name</label>
-                    <input type="text" id="last-name" placeholder="Last Name" required>
+                    <input type="text" id="last-name" @bind="LastName" placeholder="Last Name" required>
                 </div>
                 <div class="input-group">
                     <label for="sex">Sex</label>
-                    <select id="sex" required>
+                    <select id="sex" @bind="Sex" required>
                         <option value="" disabled selected>Sex</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
@@ -42,18 +45,108 @@
                 </div>
                 <div class="input-group">
                     <label for="birthdate">Birthdate</label>
-                    <input type="date" id="birthdate" placeholder="Birthdate" required>
+                    <input type="date" id="birthdate" @bind="Birthdate" required>
                 </div>
                 <div class="input-group">
                     <label for="email">Email Address</label>
-                    <input type="email" id="email" placeholder="Email Address" required>
+                    <input type="email" id="email" @bind="Email" placeholder="Email Address" required>
                 </div>
                 <div class="input-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" placeholder="Password" required>
+                    <input type="password" id="password" @bind="Password" placeholder="Password" required>
                 </div>
                 <button type="submit" class="create-account-button">Create Account</button>
             </form>
+
+            <!-- Error or success message display -->
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="error">@ErrorMessage</div>
+            }
+
+            @if (SignUpSuccess)
+            {
+                <div class="success">Sign-up successful! Redirecting to login.</div>
+            }
         </div>
     </div>
 </div>
+
+@code {
+    private string FirstName { get; set; }
+    private string MiddleInitial { get; set; }
+    private string LastName { get; set; }
+    private string Sex { get; set; }
+    private DateTime Birthdate { get; set; }
+    private string Email { get; set; }
+    private string Password { get; set; }
+    private string ErrorMessage { get; set; }
+    private bool SignUpSuccess { get; set; } = false;
+
+    private async Task HandleSignUp()
+    {
+        // Clear any previous error messages
+        ErrorMessage = string.Empty;
+        SignUpSuccess = false;
+
+        // Validate input fields
+        if (string.IsNullOrEmpty(FirstName) || string.IsNullOrEmpty(MiddleInitial) || string.IsNullOrEmpty(LastName) || 
+            string.IsNullOrEmpty(Sex) || Birthdate == default || string.IsNullOrEmpty(Email) || string.IsNullOrEmpty(Password))
+        {
+            ErrorMessage = "All fields are required.";
+            return;
+        }
+
+        // Check age (18 years or older)
+        var age = DateTime.Now.Year - Birthdate.Year;
+        if (DateTime.Now.Month < Birthdate.Month || (DateTime.Now.Month == Birthdate.Month && DateTime.Now.Day < Birthdate.Day))
+        {
+            age--;
+        }
+
+        if (age < 18)
+        {
+            ErrorMessage = "You must be 18 years old or older to sign up.";
+            return;
+        }
+
+        // Validate password length (at least 8 characters)
+        if (Password.Length < 8)
+        {
+            ErrorMessage = "Password must be at least 8 characters long.";
+            return;
+        }
+
+        try
+        {
+            // Call Firebase Authentication service for sign up
+            var response = await AuthService.SignUpAsync(Email, Password);
+
+            // On success, handle post-signup tasks
+            Console.WriteLine($"User signed up successfully. Token: {response.IdToken}");
+
+            // Indicate success
+            SignUpSuccess = true;
+
+            // Force the UI to update (to display the success message)
+            StateHasChanged();
+
+            // Redirect to the login page after a short delay to show the success message
+            await Task.Delay(2000); // Delay to allow the success message to be visible
+            Navigation.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            // Handle account already exists error (EMAIL_EXISTS)
+            if (ex.Message.Contains("EMAIL_EXISTS"))
+            {
+                ErrorMessage = "This email address is already registered. Please use a different email.";
+            }
+            else
+            {
+                // Display generic error message if sign-up fails
+                ErrorMessage = $"Sign-up failed: {ex.Message}";
+            }
+        }
+    }
+}

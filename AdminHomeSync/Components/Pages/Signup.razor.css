@@ -138,10 +138,6 @@
     background-image: url('images/email 2.png');
 }
 
-.password-icon {
-    background-image: url('images/password-hide 2.png');
-}
-
 .create-account-button {
     width: 100%;
     padding: 10px;
@@ -153,4 +149,43 @@
     margin-top: 30px;
     margin-bottom: 3px;
     border-radius: 35px;
+}
+
+.password-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-container input {
+    flex-grow: 1;
+    padding-right: 40px; /* Space for the toggle button */
+}
+
+.error, .success {
+    font-size: 14px;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+    text-align: center;
+    width: 100%;
+}
+
+.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.success {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 10px;
+    margin-top: 10px;
+    text-align: center;
+    border-radius: 5px;
 }
