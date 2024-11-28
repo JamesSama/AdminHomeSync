@@ -176,13 +176,13 @@ namespace AdminHomeSync.Components.Services
         {
             try
             {
-                // Fetch all activities for the given userId from Firebase
+                // Fetch all activities for the given userId from the 'activity' node
                 var activityItems = await firebaseClient
                     .Child("activity")
                     .Child(userId)  // Querying under the userId node
                     .OnceAsync<object>();  // Using object to handle different data types
 
-                // If no activities are found for the user
+                // If no activities are found for the user, return a message
                 if (activityItems == null || !activityItems.Any())
                 {
                     return "No login activity found for this user.";
@@ -191,32 +191,28 @@ namespace AdminHomeSync.Components.Services
                 // List to store parsed login activities
                 var loginActivities = new List<dynamic>();
 
-                // Iterate over each activity and filter out "User logged in" actions
+                // Iterate over each activity to filter out "User logged in" actions
                 foreach (var activityItem in activityItems)
                 {
-                    // Treat activityItem.Object as a dynamic object
+                    // Treat activityItem.Object as a dynamic object to extract fields
                     dynamic activity = activityItem.Object;
 
-                    // Ensure that the required fields exist in the activity
-                    if (activity == null ||
-                        activity.Action == null ||
-                        activity.Date == null ||
-                        activity.Time == null ||
-                        activity.userId == null)
+                    // Ensure the required fields exist in the activity
+                    if (activity == null || activity.Action == null || activity.Date == null || activity.Time == null || activity.UserId == null)
                     {
                         continue;
                     }
 
-                    // Extract fields from the dynamic object
+                    // Extract relevant fields from the dynamic object
                     string action = activity.Action;
                     string date = activity.Date;
                     string time = activity.Time;
-                    string activityUserId = activity.userId;
+                    string activityUserId = activity.UserId;
 
-                    // Ensure the action is "User logged in" and the date/time are valid
-                    if (action != null && date != null && time != null && activityUserId == userId && action.Contains("User logged in"))
+                    // Ensure the action is "User logged in" and the userId matches
+                    if (action == "User logged in" && activityUserId == userId)
                     {
-                        // Trim whitespace from date and time
+                        // Trim any extra whitespace from the date and time
                         date = date.Trim();
                         time = time.Trim();
 
@@ -225,17 +221,19 @@ namespace AdminHomeSync.Components.Services
                         DateTime activityTime = DateTime.MinValue;
 
                         bool dateParsed = DateTime.TryParseExact(date,
-                            "MMMM dd, yyyy",  // Only supporting this format
+                            "MMMM dd, yyyy",  // Expected date format
                             CultureInfo.InvariantCulture,
                             DateTimeStyles.None,
                             out activityDate);
 
                         // Normalize time format (e.g., convert "pm" to "PM")
-                        time = time.ToUpper(); // Ensure time is in uppercase (e.g., "3:00 PM")
+                        time = time.ToUpper();  // Ensure the time is in uppercase (e.g., "3:00 PM")
 
                         // Attempt to parse the time using the "hh:mm tt" format (case-insensitive)
-                        bool timeParsed = DateTime.TryParseExact(time, "hh:mm tt", CultureInfo.InvariantCulture, DateTimeStyles.None, out activityTime);
+                        bool timeParsed = DateTime.TryParseExact(time, "hh:mm tt",
+                            CultureInfo.InvariantCulture, DateTimeStyles.None, out activityTime);
 
+                        // If both date and time parsed correctly, create a DateTime object
                         if (dateParsed && timeParsed)
                         {
                             var loginDateTime = activityDate.Date.Add(activityTime.TimeOfDay);
@@ -248,7 +246,7 @@ namespace AdminHomeSync.Components.Services
                     }
                 }
 
-                // If no login activities were found
+                // If no valid login activities found
                 if (!loginActivities.Any())
                 {
                     return "No login activity found for this user.";
@@ -259,6 +257,7 @@ namespace AdminHomeSync.Components.Services
                     .OrderByDescending(a => a.LoginDateTime)
                     .First();
 
+                // Return the latest login formatted as "MMMM dd, yyyy at hh:mm tt"
                 return $"{latestLogin.LoginDateTime:MMMM dd, yyyy} at {latestLogin.LoginDateTime:hh:mm tt}";
             }
             catch (Exception ex)
@@ -267,8 +266,6 @@ namespace AdminHomeSync.Components.Services
                 return null;
             }
         }
-
-
 
     }
 

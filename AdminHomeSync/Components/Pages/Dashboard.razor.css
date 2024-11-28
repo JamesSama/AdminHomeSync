@@ -98,7 +98,7 @@ a, a:hover {
 
 .box-content-container {
     display: flex;
-    flex-direction: column-reverse; /*ensures data creation will increment at the top of the older data */
+    flex-direction: column;
     max-height: 260px;
     overflow-y: auto;
 }
@@ -154,7 +154,7 @@ a, a:hover {
     text-transform: capitalize;
     font-size: 20px;
     font-weight: 600;
-    width: 60%;
+    width: 50%;
 }
 
 .left-notif {

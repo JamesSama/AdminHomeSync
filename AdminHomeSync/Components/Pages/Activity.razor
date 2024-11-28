@@ -21,7 +21,7 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Date • Time</th>
+                                <th>Date â€¢ Time</th>
                                 <th>Name</th>
                                 <th>Role</th>
                                 <th>Action</th>
@@ -42,7 +42,7 @@
                                 @foreach (var activity in activities)
                                 {
                                     <tr>
-                                        <td>@activity.DateTime.ToString("MM/dd/yyyy • h:mm:ss tt")</td>
+                                        <td>@activity.DateTime.ToString("MM/dd/yyyy â€¢ h:mm:ss tt")</td>
                                         <td>@activity.UserName</td>
                                         <td>@activity.Role</td>
                                         <td>@activity.Action</td>
@@ -68,8 +68,8 @@
         {
             // Fetch activities from the ActivityService
             activities = (await ActivityService.FetchActivitiesFromFirebase())
-                          .OrderByDescending(a => a.DateTime)
-                          .ToList();
+            .OrderByDescending(a => a.DateTime)
+            .ToList();
         }
         catch (Exception ex)
         {
@@ -78,4 +78,3 @@
         }
     }
 }
-

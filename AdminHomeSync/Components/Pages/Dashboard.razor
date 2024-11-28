@@ -21,14 +21,14 @@
                     <div class="box-header">
                         <div class="header-left">
                             <img src="icon/nav-activity.svg" alt="Activity Icon" class="icon-act" />
-                            <div>Recent Activity</div>
+                            <div>Recent Activities</div>
                         </div>
                         <a href="/activity" class="nav-link">See all</a>
                     </div>
                     <div class="box-content-container">
                         @if (activities != null && activities.Any())
                         {
-                            @foreach (var activity in activities.Take(5).Reverse()) //only 5 activities will be shown
+                            @foreach (var activity in activities)
                             {
                                 <div class="box-content">
                                     <p class="left-act">@activity.Action: @activity.UserName</p>
@@ -135,8 +135,8 @@
         {
             // Fetch recent activities from Firebase and sort by DateTime
             activities = (await ActivityService.FetchActivitiesFromFirebase())
-                         .OrderByDescending(a => a.DateTime)
-                         .ToList();
+            .OrderByDescending(a => a.DateTime)
+            .ToList();
         }
         catch (Exception ex)
         {
@@ -151,9 +151,9 @@
 
             // Calculate summary counts
             connectedDevicesCount = userDevices.Sum(d =>
-                (d.Lights.IsConnected ? 1 : 0) +
-                (d.Fan.IsConnected ? 1 : 0) +
-                (d.MotionSensor.IsConnected ? 1 : 0));
+            (d.Lights.IsConnected ? 1 : 0) +
+            (d.Fan.IsConnected ? 1 : 0) +
+            (d.MotionSensor.IsConnected ? 1 : 0));
         }
         catch (Exception ex)
         {
