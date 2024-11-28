@@ -1,11 +1,11 @@
-/* CSS FOR DEVICES PAGE */
+
 .devices {
     display: flex;
     height: 100vh;
     padding: 30px;
 }
 
-/* Main Box */
+
 .devices-outer-box {
     display: flex;
     flex-direction: column;
@@ -15,14 +15,13 @@
     width: 100%;
 }
 
-/* Page container*/
+
 .devices-page {
     table-layout: fixed;
     display: flex;
     flex-direction: column;
 }
 
-/* Header styling */
 .devices-outer-box h3 {
     font-family: 'Outfit', sans-serif;
     font-size: 36px;
@@ -31,7 +30,6 @@
     padding: 20px 20px 20px 0px;
 }
 
-/* Container for summary boxes */
 .devices-summary-row {
     display: flex;
     gap: 20px;
@@ -39,7 +37,6 @@
     justify-content: space-between;
 }
 
-/* Individual summary box styling */
 .devices-summary-box {
     background-color: #FFFFFF;
     border-radius: 15px;
@@ -67,7 +64,6 @@
         margin: 0 15px;
     }
 
-    /* Icon inside summary box */
     .devices-summary-box img {
         width: 50px;
         height: 50px;
@@ -82,7 +78,6 @@
     width: 100%;
 }
 
-/* Header row */
 .container-header {
     display: flex;
     justify-content: space-between;
@@ -99,10 +94,9 @@
         margin: 0;
         padding: 15px 0px;
         text-align: center;
-        flex-grow: 1; /* Ensures all header columns are equally spaced */
+        flex-grow: 1; 
     }
 
-/* Device list content container */
 .device-content-container {
     background-color: #ffffff;
     padding: 30px;
@@ -139,7 +133,6 @@
     padding: 5px; 
 }
 
-/* Column width settings */
 .list-box .contents-id {
     width: 10%; 
 }
@@ -156,7 +149,6 @@
     width: 14%; 
 }
 
-/* Header column width adjustments */
 .container-header p:nth-child(1) {
     width: 10%; 
 }

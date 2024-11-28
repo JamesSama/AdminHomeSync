@@ -67,11 +67,12 @@
         try
         {
             // Fetch activities from the ActivityService
-            activities = await ActivityService.FetchActivitiesFromFirebase();
+            activities = (await ActivityService.FetchActivitiesFromFirebase())
+                          .OrderByDescending(a => a.DateTime)
+                          .ToList();
         }
         catch (Exception ex)
         {
-            // Log the error and display a user-friendly message
             Console.WriteLine($"Error loading activities: {ex.Message}");
             ErrorMessage = "Something went wrong while loading the activities. Please try again later.";
         }
