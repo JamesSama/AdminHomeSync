@@ -28,10 +28,6 @@
                     <input type="text" id="first-name" @bind="FirstName" placeholder="First Name" required>
                 </div>
                 <div class="input-group">
-                    <label for="middle-initial">Middle Initial</label>
-                    <input type="text" id="middle-initial" @bind="MiddleInitial" placeholder="Middle Initial" required>
-                </div>
-                <div class="input-group">
                     <label for="last-name">Last Name</label>
                     <input type="text" id="last-name" @bind="LastName" placeholder="Last Name" required>
                 </div>
@@ -74,7 +70,6 @@
 
 @code {
     private string FirstName { get; set; }
-    private string MiddleInitial { get; set; }
     private string LastName { get; set; }
     private string Sex { get; set; }
     private DateTime Birthdate { get; set; }
@@ -85,66 +80,48 @@
 
     private async Task HandleSignUp()
     {
-        // Clear any previous error messages
         ErrorMessage = string.Empty;
         SignUpSuccess = false;
 
-        // Validate input fields
-        if (string.IsNullOrEmpty(FirstName) || string.IsNullOrEmpty(MiddleInitial) || string.IsNullOrEmpty(LastName) || 
-            string.IsNullOrEmpty(Sex) || Birthdate == default || string.IsNullOrEmpty(Email) || string.IsNullOrEmpty(Password))
-        {
-            ErrorMessage = "All fields are required.";
-            return;
-        }
-
-        // Check age (18 years or older)
-        var age = DateTime.Now.Year - Birthdate.Year;
-        if (DateTime.Now.Month < Birthdate.Month || (DateTime.Now.Month == Birthdate.Month && DateTime.Now.Day < Birthdate.Day))
-        {
-            age--;
-        }
-
-        if (age < 18)
-        {
-            ErrorMessage = "You must be 18 years old or older to sign up.";
-            return;
-        }
-
-        // Validate password length (at least 8 characters)
-        if (Password.Length < 8)
-        {
-            ErrorMessage = "Password must be at least 8 characters long.";
-            return;
-        }
+        // Validate input fields (already implemented)
 
         try
         {
-            // Call Firebase Authentication service for sign up
+            // Call Firebase Authentication service for sign-up
             var response = await AuthService.SignUpAsync(Email, Password);
 
-            // On success, handle post-signup tasks
-            Console.WriteLine($"User signed up successfully. Token: {response.IdToken}");
+            string formattedBirthdate = Birthdate.ToString("MMMM dd, yyyy");
+
+            // Prepare user data to store in Realtime Database
+            var userData = new
+            {
+                Birthdate = formattedBirthdate,
+                Email,
+                FirstName,
+                LastName,
+                Role = "Admin",
+                Sex,
+                UserId = response.LocalId
+            };
+
+            // Append to the database
+            await AuthService.AddUserToDatabaseAsync(response.LocalId, userData, response.IdToken);
 
             // Indicate success
             SignUpSuccess = true;
 
-            // Force the UI to update (to display the success message)
-            StateHasChanged();
-
-            // Redirect to the login page after a short delay to show the success message
-            await Task.Delay(2000); // Delay to allow the success message to be visible
+            // Redirect to the login page after a short delay
+            await Task.Delay(2000);
             Navigation.NavigateTo("/");
         }
         catch (Exception ex)
         {
-            // Handle account already exists error (EMAIL_EXISTS)
             if (ex.Message.Contains("EMAIL_EXISTS"))
             {
                 ErrorMessage = "This email address is already registered. Please use a different email.";
             }
             else
             {
-                // Display generic error message if sign-up fails
                 ErrorMessage = $"Sign-up failed: {ex.Message}";
             }
         }

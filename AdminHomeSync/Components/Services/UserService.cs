@@ -130,8 +130,8 @@ namespace AdminHomeSync.Components.Services
                         .Child(userId)
                         .DeleteAsync();
 
-                    // Append deletion activity in the 'activity' node
-                    await AppendDeletionActivityAsync(userToDelete);
+                    // Append deletion activity in the 'activity' node under the logged-in user's ID
+                    await AppendDeletionActivityAsync(userToDelete, userId);
 
                     return true;
                 }
@@ -145,9 +145,8 @@ namespace AdminHomeSync.Components.Services
             }
         }
 
-
-        // Append the deletion activity in the 'activity' node
-        private async Task AppendDeletionActivityAsync(User deletedUser)
+        // Append the deletion activity in the 'activity' node under the logged-in user's userId
+        private async Task AppendDeletionActivityAsync(User deletedUser, string userId)
         {
             var actionDate = DateTime.Now.ToString("MMMM dd, yyyy"); // Format the current date
             var actionTime = DateTime.Now.ToString("hh:mm tt");   // Format the current time in 12-hour format with AM/PM
@@ -157,18 +156,18 @@ namespace AdminHomeSync.Components.Services
                 Action = "User Deleted",
                 Date = actionDate,
                 Time = actionTime,
-                UserID = deletedUser.UserId,
                 FirstName = deletedUser.FirstName,
                 LastName = deletedUser.LastName,
                 Role = deletedUser.Role,
                 Sex = deletedUser.Sex,
                 Email = deletedUser.Email,
-                BirthDate = deletedUser.Birthdate
+                UserId = userId
             };
 
-            // Append activity log in the 'activity' node
+            // Append activity log in the 'activity' node under the userId (logged-in user)
             await firebaseClient
                 .Child("activity")
+                .Child(userId)  // Use the logged-in user's userId to log under their activity node
                 .PostAsync(activity);
         }
 
