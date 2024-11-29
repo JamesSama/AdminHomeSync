@@ -1,34 +1,38 @@
 ﻿@page "/profile"
+@using AdminHomeSync.Components.Services
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@inject ProfileService ProfileService
 
 <PageTitle>Profile</PageTitle>
 
 <div class="profile-page">
     <div class="profile-container">
-            <p class="top-header">Profile</p>
-            <div class="top-box">
-                <div class="top-box-left">
-                    <p class="top-name">@profile.Username</p>
-                    <p class="top-sub">Name</p>
-                </div>
-                <div class="top-box-right">
-                    <button href="/login" class="logout">
-                        <img src="icon/logout.svg" alt="Logout Logo" class="logout-icon" />
-                        Logout
-                    </button>
-                </div>
+        <p class="top-header">Profile</p>
+        <div class="top-box">
+            <div class="top-box-left">
+                <p class="top-name">@profile.FirstName @profile.LastName</p>
+                <p class="top-sub">Name</p>
             </div>
-            <div class="bottom-part">
-                <p class="bottom-header">Personal Information</p>
-                <div class="bottom-box">
-                    <div class="box-item">
-                        <div class="logo-container">
-                            <img src="icon/web-profile-birthdate.svg" alt="Birthdate Logo" class="birthdate-icon"/>
-                        </div>
-                        <div class="text-content">
-                        <p class="top-text">@profile.Birthdate.ToString("MMMM d, yyyy")</p>
-                            <p class="bot-text">Birthdate</p>
-                        </div>
+            <div class="top-box-right">
+                <button class="logout" @onclick="Logout">
+                    <img src="icon/logout.svg" alt="Logout Logo" class="logout-icon" />
+                    Logout
+                </button>
+            </div>
+        </div>
+        <div class="bottom-part">
+            <p class="bottom-header">Personal Information</p>
+            <div class="bottom-box">
+                <div class="box-item">
+                    <div class="logo-container">
+                        <img src="icon/web-profile-birthdate.svg" alt="Birthdate Logo" class="birthdate-icon" />
                     </div>
+                    <div class="text-content">
+                        <p class="top-text">@profile.Birthdate</p>
+                        <p class="bot-text">Birthdate</p>
+                    </div>
+                </div>
                 <div class="box-item">
                     <div class="logo-container">
                         <img src="icon/web-profile-sex.svg" alt="Sex Logo" class="sex-icon" />
@@ -43,36 +47,53 @@
                         <img src="icon/web-profile-email.svg" alt="Email Logo" class="email-icon" />
                     </div>
                     <div class="text-content">
-                        <p class="top-text">@profile.RegisteredEmail</p>
+                        <p class="top-text">@profile.Email</p>
                         <p class="bot-text">Email</p>
                     </div>
                 </div>
-                 </div>
             </div>
+        </div>
     </div>
 </div>
 
 @code {
-    // User profile model
-    public class UserProfile
+    private ProfileService.UserProfile profile = new();
+    private string userId;
+
+    // This is called when the page initializes
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        public string Username { get; set; }
-        public DateTime Birthdate { get; set; }
-        public string RegisteredEmail { get; set; }
-        public string Sex { get; set; }
+        // Perform JS interop after rendering
+        if (firstRender)
+        {
+            try
+            {
+                // Fetch userId from localStorage
+                userId = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
+
+                if (string.IsNullOrEmpty(userId))
+                {
+                    // If no userId found, redirect to login page
+                    Navigation.NavigateTo("/login");
+                    return;
+                }
+
+                // Fetch profile data using ProfileService
+                profile = await ProfileService.GetUserProfileAsync(userId);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching profile: {ex.Message}");
+            }
+        }
     }
 
-    private UserProfile profile = new();
-
-    protected override void OnInitialized()
+    // Handle logout functionality
+    private async Task Logout()
     {
-        // Initialize with sample data
-        profile = new UserProfile
-            {
-                Username = "Carlos James S. Defita",
-                Birthdate = new DateTime(2002, 7, 31),
-                RegisteredEmail = "cj31defita@gmail.com",
-                Sex = "Male"
-            };
+        // Clear session data and navigate to login
+        await JS.InvokeVoidAsync("localStorage.removeItem", "firebaseToken");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "userId");
+        Navigation.NavigateTo("/login");
     }
 }

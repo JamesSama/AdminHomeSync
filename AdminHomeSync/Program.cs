@@ -10,11 +10,17 @@ builder.Services.AddRazorComponents()
 builder.Services.AddSingleton<ActivityService>(); //activity page
 builder.Services.AddScoped<DeviceService>(); //device page
 builder.Services.AddScoped<IUserService, UserService>(); //users page
-builder.Services.AddSingleton<NotificationService>(); //notification page
 builder.Services.AddScoped<FirebaseAuthService>(); //signup page
-builder.Services.AddHttpClient(); //signup page
+builder.Services.AddHttpClient(); // For handling HTTP requests
+builder.Services.AddScoped<ProfileService>(); // Register ProfileService here
+builder.Services.AddSingleton<ProfileService>();
 
+// Register NotificationService as Scoped
+builder.Services.AddScoped<NotificationService>(); // notification page
 
+// Register HttpClient with a specific base address
+builder.Services.AddScoped(sp =>
+    new HttpClient { BaseAddress = new Uri("https://homesync-3be92-default-rtdb.firebaseio.com/") });
 
 var app = builder.Build();
 
@@ -22,12 +28,10 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 app.UseAntiforgery();
 

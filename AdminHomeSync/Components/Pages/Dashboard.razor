@@ -59,7 +59,7 @@
                             {
                                 <div class="box-content">
                                     <p class="left-notif">@notification.Message</p>
-                                    <p>@notification.Date</p>
+                                    <p>@notification.FullDateTime</p> <!-- Use FullDateTime for consistent formatting -->
                                 </div>
                             }
                         }
@@ -161,7 +161,16 @@
             connectedDevicesCount = 0;
         }
 
-        notifications = NotificationService.GetNotifications();
+        try
+        {
+            // Fetch notifications
+            notifications = await NotificationService.GetNotificationsAsync("XUeckjx6v3W7o35jqniz5USH3sy2");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching notifications: {ex.Message}");
+            notifications = new List<NotificationItem>();
+        }
     }
 
     [JSInvokable]
