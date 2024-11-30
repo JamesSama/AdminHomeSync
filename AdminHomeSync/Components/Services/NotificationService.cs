@@ -1,37 +1,63 @@
-﻿using System.Net.Http.Json;
+﻿using Firebase.Database;
+using Firebase.Database.Query;
 using System.Globalization;
 
 namespace AdminHomeSync.Components.Services
 {
     public class NotificationService
     {
-        private readonly HttpClient _httpClient;
+        private readonly FirebaseClient _firebaseClient;
 
-        public NotificationService(HttpClient httpClient)
+        public NotificationService()
         {
-            _httpClient = httpClient;
+            _firebaseClient = new FirebaseClient("https://homesync-3be92-default-rtdb.firebaseio.com/");
         }
 
-        // Public method that components will call
-        public async Task<List<NotificationItem>> GetNotificationsAsync(string userId)
+        // Fetch all notifications initially
+        public async Task<List<NotificationItem>> GetAllNotificationsAsync()
         {
-            // Fetch notifications and sort them
-            var notifications = await FetchNotificationsFromFirebaseAsync(userId);
+            var notifications = await FetchAllNotificationsFromFirebaseAsync();
 
-            // Sort notifications by Date and Time (newest first)
-            notifications = notifications
-                .OrderByDescending(n => ParseDateTime(n.Date, n.Time))  // Sorting by DateTime
+            return notifications
+                .OrderByDescending(n => ParseDateTime(n.Date, n.Time))
+                .ToList();
+        }
+
+        // Real-time listener for notifications across all users
+        public void ListenForAllNotifications(Action<NotificationItem> onNewNotification)
+        {
+            _firebaseClient
+                .Child("notifications") // Listen to all notifications
+                .AsObservable<NotificationItem>()
+                .Subscribe(firebaseEvent =>
+                {
+                    if (firebaseEvent.Object != null)
+                    {
+                        onNewNotification(firebaseEvent.Object);
+                    }
+                });
+        }
+
+        // Fetch notifications for all users from Firebase
+        private async Task<List<NotificationItem>> FetchAllNotificationsFromFirebaseAsync()
+        {
+            // Fetch all user notification nodes
+            var userNotifications = await _firebaseClient
+                .Child("notifications")
+                .OnceAsync<Dictionary<string, NotificationItem>>();
+
+            // Flatten notifications into a single list
+            var notifications = userNotifications
+                .SelectMany(userNode => userNode.Object.Values)
                 .ToList();
 
             return notifications;
         }
 
-        // Parse Date and Time to DateTime
+        // Helper method to parse DateTime
         private DateTime ParseDateTime(string date, string time)
         {
-            var combinedDateTime = $"{date} {time}"; // Combine Date and Time for sorting
-
-            // Try parsing the combined DateTime string
+            var combinedDateTime = $"{date} {time}";
             if (DateTime.TryParseExact(
                 combinedDateTime,
                 new[] { "MMMM d, yyyy h:mm tt", "MMM d, yyyy h:mm tt" },
@@ -42,27 +68,17 @@ namespace AdminHomeSync.Components.Services
                 return parsedDateTime;
             }
 
-            return DateTime.MinValue; // Return the minimum value if parsing fails
+            return DateTime.MinValue;
         }
 
-        // Child method that fetches data from Firebase
-        private async Task<List<NotificationItem>> FetchNotificationsFromFirebaseAsync(string userId)
-        {
-            var firebaseUrl = $"https://homesync-3be92-default-rtdb.firebaseio.com/notifications/{userId}.json";
-            var response = await _httpClient.GetFromJsonAsync<Dictionary<string, NotificationItem>>(firebaseUrl);
-
-            return response?.Values.ToList() ?? new List<NotificationItem>();
-        }
-
-        // Notification data model
         public class NotificationItem
         {
+            public string Action { get; set; } = string.Empty;
             public string Message { get; set; } = string.Empty;
             public string Date { get; set; } = string.Empty;
             public string Time { get; set; } = string.Empty;
 
-            // Combining Date and Time into a FullDateTime string for display
-            public string FullDateTime => $"{Date} • {Time}";
+            public string FullDateTime => $"{Date} {Time}";
         }
     }
 }

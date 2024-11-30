@@ -13,10 +13,7 @@ builder.Services.AddScoped<IUserService, UserService>(); //users page
 builder.Services.AddScoped<FirebaseAuthService>(); //signup page
 builder.Services.AddHttpClient(); // For handling HTTP requests
 builder.Services.AddScoped<ProfileService>(); // Register ProfileService here
-builder.Services.AddSingleton<ProfileService>();
-
-// Register NotificationService as Scoped
-builder.Services.AddScoped<NotificationService>(); // notification page
+builder.Services.AddScoped<NotificationService>(); // Notification service
 
 // Register HttpClient with a specific base address
 builder.Services.AddScoped(sp =>

@@ -1,11 +1,11 @@
 ﻿@page "/dashboard"
 @using AdminHomeSync.Components.Services
+@using System.Globalization
 @inject IJSRuntime JS
 @inject IUserService UserService
-@inject DeviceService DeviceService /*for calling connected devices*/
-@inject ActivityService ActivityService /*for logging activity list*/
-@using static AdminHomeSync.Components.Services.NotificationService
-@inject NotificationService NotificationService /*for logging notification messages [2/2]*/
+@inject DeviceService DeviceService
+@inject ActivityService ActivityService
+@inject NotificationService NotificationService
 
 <PageTitle>Dashboard</PageTitle>
 
@@ -100,8 +100,8 @@
 </div>
 
 @code {
+    private List<NotificationService.NotificationItem> notifications = new();
     private List<UserActivity> activities = new List<UserActivity>();
-    private List<NotificationItem>? notifications;
     private UserSummation? summation;
     private int connectedDevicesCount;
     private string displayedDate = string.Empty;
@@ -163,14 +163,51 @@
 
         try
         {
-            // Fetch notifications
-            notifications = await NotificationService.GetNotificationsAsync("XUeckjx6v3W7o35jqniz5USH3sy2");
+            // Fetch all notifications initially
+            notifications = await NotificationService.GetAllNotificationsAsync();
+
+            // Sort notifications by the latest date at the top
+            notifications = notifications.OrderByDescending(n => ParseDateTime(n.Date, n.Time)).ToList();
+
+            // Start listening for real-time updates
+            NotificationService.ListenForAllNotifications(OnNewNotification);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error fetching notifications: {ex.Message}");
-            notifications = new List<NotificationItem>();
+            Console.WriteLine($"Error loading notifications: {ex.Message}");
+            notifications = new List<NotificationService.NotificationItem>();
         }
+    }
+
+    private void OnNewNotification(NotificationService.NotificationItem notification)
+    {
+        InvokeAsync(() =>
+        {
+            // Insert the new notification at the top
+            notifications.Insert(0, notification);
+
+            // Sort notifications by the latest date at the top (again after insertion)
+            notifications = notifications.OrderByDescending(n => ParseDateTime(n.Date, n.Time)).ToList();
+
+            // Refresh the UI
+            StateHasChanged();
+        });
+    }
+
+    private DateTime ParseDateTime(string date, string time)
+    {
+        var combinedDateTime = $"{date} {time}";
+        if (DateTime.TryParseExact(
+        combinedDateTime,
+        new[] { "MMMM d, yyyy h:mm tt", "MMM d, yyyy h:mm tt" },
+        CultureInfo.InvariantCulture,
+        DateTimeStyles.None,
+        out DateTime parsedDateTime))
+        {
+            return parsedDateTime;
+        }
+
+        return DateTime.MinValue;
     }
 
     [JSInvokable]

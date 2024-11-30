@@ -1,5 +1,6 @@
 ﻿@page "/notification"
 @using AdminHomeSync.Components.Services
+@using System.Globalization
 @inject NotificationService NotificationService
 
 <PageTitle>Notifications</PageTitle>
@@ -27,12 +28,62 @@
 </div>
 
 @code {
-    private List<NotificationService.NotificationItem>? notifications;
-    private const string UserId = "XUeckjx6v3W7o35jqniz5USH3sy2"; // Replace with dynamic user ID if needed.
+    private List<NotificationService.NotificationItem> notifications = new();
+
+    // Parse the DateTime here in Notification.razor instead of NotificationService
+    private DateTime ParseDateTime(string date, string time)
+    {
+        var combinedDateTime = $"{date} {time}";
+        if (DateTime.TryParseExact(
+        combinedDateTime,
+        new[] { "MMMM d, yyyy h:mm tt", "MMM d, yyyy h:mm tt" },
+        CultureInfo.InvariantCulture,
+        DateTimeStyles.None,
+        out DateTime parsedDateTime))
+        {
+            return parsedDateTime;
+        }
+
+        return DateTime.MinValue;
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        // Fetch and sort notifications when the page is initialized
-        notifications = await NotificationService.GetNotificationsAsync(UserId);
+        try
+        {
+            // Fetch all notifications initially
+            notifications = await NotificationService.GetAllNotificationsAsync();
+
+            // Sort notifications by the latest date at the top
+            SortNotifications();
+
+            // Start listening for real-time updates
+            NotificationService.ListenForAllNotifications(OnNewNotification);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading notifications: {ex.Message}");
+        }
+    }
+
+    private void SortNotifications()
+    {
+        // Sort notifications by the latest date at the top
+        notifications = notifications.OrderByDescending(n => ParseDateTime(n.Date, n.Time)).ToList();
+    }
+
+    private void OnNewNotification(NotificationService.NotificationItem notification)
+    {
+        InvokeAsync(() =>
+        {
+            // Insert the new notification at the top
+            notifications.Insert(0, notification);
+
+            // Sort notifications again to make sure the latest one is on top
+            SortNotifications();
+
+            // Refresh the UI
+            StateHasChanged();
+        });
     }
 }
