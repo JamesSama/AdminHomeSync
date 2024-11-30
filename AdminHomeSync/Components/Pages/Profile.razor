@@ -1,8 +1,7 @@
 ﻿@page "/profile"
-@using AdminHomeSync.Components.Services
-@inject IJSRuntime JS
+@inject FirebaseAuthService FirebaseAuthService
 @inject NavigationManager Navigation
-@inject ProfileService ProfileService
+@rendermode InteractiveServer
 
 <PageTitle>Profile</PageTitle>
 
@@ -11,7 +10,15 @@
         <p class="top-header">Profile</p>
         <div class="top-box">
             <div class="top-box-left">
-                <p class="top-name">@profile.FirstName @profile.LastName</p>
+                @if (profile != null)
+                {
+                    <p class="top-name">@profile.FirstName @profile.LastName</p>
+                }
+                else
+                {
+                    <p style="line-height: normal; margin: 0px">Loading...</p>
+                    <!-- Show loading text while waiting for the profile -->
+                }
                 <p class="top-sub">Name</p>
             </div>
             <div class="top-box-right">
@@ -21,6 +28,7 @@
                 </button>
             </div>
         </div>
+
         <div class="bottom-part">
             <p class="bottom-header">Personal Information</p>
             <div class="bottom-box">
@@ -29,7 +37,15 @@
                         <img src="icon/web-profile-birthdate.svg" alt="Birthdate Logo" class="birthdate-icon" />
                     </div>
                     <div class="text-content">
-                        <p class="top-text">@profile.Birthdate</p>
+                        @if (profile != null)
+                        {
+                            <p class="top-text">@profile.Birthdate</p>
+                        }
+                        else
+                        {
+                            <p style="line-height: normal; margin: 0px">Loading...</p>
+                            <!-- Show loading text while waiting for the profile -->
+                        }
                         <p class="bot-text">Birthdate</p>
                     </div>
                 </div>
@@ -38,7 +54,15 @@
                         <img src="icon/web-profile-sex.svg" alt="Sex Logo" class="sex-icon" />
                     </div>
                     <div class="text-content">
-                        <p class="top-text">@profile.Sex</p>
+                        @if (profile != null)
+                        {
+                            <p class="top-text">@profile.Sex</p>
+                        }
+                        else
+                        {
+                            <p style="line-height: normal; margin: 0px">Loading...</p>
+                            <!-- Show loading text while waiting for the profile -->
+                        }
                         <p class="bot-text">Sex</p>
                     </div>
                 </div>
@@ -47,7 +71,15 @@
                         <img src="icon/web-profile-email.svg" alt="Email Logo" class="email-icon" />
                     </div>
                     <div class="text-content">
-                        <p class="top-text">@profile.Email</p>
+                        @if (profile != null)
+                        {
+                            <p class="top-text">@profile.Email</p>
+                        }
+                        else
+                        {
+                            <p style="line-height: normal; margin: 0px">Loading...</p>
+                            <!-- Show loading text while waiting for the profile -->
+                        }
                         <p class="bot-text">Email</p>
                     </div>
                 </div>
@@ -57,43 +89,69 @@
 </div>
 
 @code {
-    private ProfileService.UserProfile profile = new();
-    private string userId;
+    private UserData profile; // Profile data is initially null
+
+    // Define the UserData class used in Profile.razor
+    public class UserData
+    {
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Birthdate { get; set; }
+        public string Sex { get; set; }
+        public string Email { get; set; }
+    }
+
+    private bool isNavigationRequired = false;
 
     // This is called when the page initializes
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var currentUser = FirebaseAuthService.GetCurrentUser();
+            if (currentUser == null)
+            {
+                isNavigationRequired = true;
+                return;
+            }
+
+            // Map data from FirebaseAuthService.UserData to Profile.UserData
+            profile = new UserData
+                {
+                    FirstName = currentUser.FirstName,
+                    LastName = currentUser.LastName,
+                    Birthdate = currentUser.Birthdate,
+                    Sex = currentUser.Sex,
+                    Email = currentUser.Email
+                };
+
+            StateHasChanged(); // Trigger a re-render to update the UI with the profile data
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching profile: {ex.Message}");
+            isNavigationRequired = true;
+        }
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        // Perform JS interop after rendering
-        if (firstRender)
+        if (firstRender && isNavigationRequired)
         {
             try
             {
-                // Fetch userId from localStorage
-                userId = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
-
-                if (string.IsNullOrEmpty(userId))
-                {
-                    // If no userId found, redirect to login page
-                    Navigation.NavigateTo("/login");
-                    return;
-                }
-
-                // Fetch profile data using ProfileService
-                profile = await ProfileService.GetUserProfileAsync(userId);
+                Navigation.NavigateTo("/profile");
             }
-            catch (Exception ex)
+            catch (NavigationException navEx)
             {
-                Console.WriteLine($"Error fetching profile: {ex.Message}");
+                Console.WriteLine($"Navigation failed: {navEx.Message}");
             }
         }
     }
 
-    // Handle logout functionality
-    private async Task Logout()
+    private void Logout()
     {
-        // Clear session data and navigate to login
-        await JS.InvokeVoidAsync("localStorage.removeItem", "firebaseToken");
-        await JS.InvokeVoidAsync("localStorage.removeItem", "userId");
-        Navigation.NavigateTo("/login");
+        FirebaseAuthService.Logout();
+        Navigation.NavigateTo("/");
     }
 }

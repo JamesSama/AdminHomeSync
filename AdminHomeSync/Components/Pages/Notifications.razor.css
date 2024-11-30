@@ -41,7 +41,7 @@
 
 .messages-container {
     display: flex;
-    flex-direction: column-reverse; /*latest messages starts from top - bottom*/
+    flex-direction: column;
     margin-top: 30px;
     overflow-y: auto;
 }

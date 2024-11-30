@@ -6,6 +6,10 @@ public class FirebaseAuthService
     private const string FirebaseAuthUrlSignIn = "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword";
     private const string FirebaseDatabaseUrl = "https://homesync-3be92-default-rtdb.firebaseio.com/";
 
+    private string _idToken;
+    private string _userId;
+    private UserData _userProfile;
+
     public FirebaseAuthService(HttpClient httpClient)
     {
         _httpClient = httpClient;
@@ -23,16 +27,10 @@ public class FirebaseAuthService
         }
     }
 
-    // SignUp method
+    // Sign-up method
     public async Task<FirebaseSignUpResponse> SignUpAsync(string email, string password)
     {
-        var request = new
-        {
-            email = email,
-            password = password,
-            returnSecureToken = true
-        };
-
+        var request = new { email, password, returnSecureToken = true };
         var response = await _httpClient.PostAsJsonAsync($"{FirebaseAuthUrlSignUp}?key={FirebaseApiKey}", request);
 
         if (response.IsSuccessStatusCode)
@@ -47,28 +45,20 @@ public class FirebaseAuthService
         }
     }
 
-    // SignIn method
+    // Sign-in method
     public async Task<FirebaseSignInResponse> SignInWithEmailAndPasswordAsync(string email, string password)
     {
-        var request = new
-        {
-            email = email,
-            password = password,
-            returnSecureToken = true
-        };
-
+        var request = new { email, password, returnSecureToken = true };
         var response = await _httpClient.PostAsJsonAsync($"{FirebaseAuthUrlSignIn}?key={FirebaseApiKey}", request);
 
         if (response.IsSuccessStatusCode)
         {
             var result = await response.Content.ReadFromJsonAsync<FirebaseSignInResponse>();
+            _idToken = result.IdToken;
+            _userId = result.LocalId;
 
-            // Retrieve FirstName and LastName from Firebase
-            var userData = await GetUserDataFromDatabaseAsync(result.LocalId, result.IdToken);
-
-            // Log activity when admin logs in
-            await LogAdminActivityAsync(result.LocalId, email, "Admin logged in", result.IdToken, userData.FirstName, userData.LastName);
-
+            // Fetch user data after sign-in
+            _userProfile = await GetUserDataFromDatabaseAsync(_userId, _idToken);
             return result;
         }
         else
@@ -96,55 +86,18 @@ public class FirebaseAuthService
         }
     }
 
-    // Method to log admin activity
-    public async Task LogAdminActivityAsync(string userId, string email, string action, string idToken, string firstName, string lastName)
+    // Get current user
+    public UserData GetCurrentUser()
     {
-        var currentDate = DateTime.Now;
-        var formattedDate = currentDate.ToString("MMMM dd, yy");
-        var formattedTime = currentDate.ToString("hh:mm tt");
-
-        // Original activity data with FirstName and LastName retrieved from Firebase
-        var activityData = new
-        {
-            Action = action,
-            Date = formattedDate,
-            Email = email,
-            FirstName = firstName,  // Retrieved from the database
-            LastName = lastName,    // Retrieved from the database
-            Role = "Admin",
-            Time = formattedTime,
-            UserId = userId
-        };
-
-        // Convert the activityData to a dictionary and capitalize the keys
-        var capitalizedActivityData = activityData.GetType()
-            .GetProperties()
-            .ToDictionary(
-                prop => prop.Name,  // Keep the original key
-                prop => prop.GetValue(activityData, null)?.ToString() // Get the value of each property
-            )
-            .ToDictionary(
-                kvp => CapitalizeFirstLetter(kvp.Key), // Capitalize the key
-                kvp => kvp.Value
-            );
-
-        var requestUrl = $"{FirebaseDatabaseUrl}/activity/{userId}.json?auth={idToken}";
-        var response = await _httpClient.PostAsJsonAsync(requestUrl, capitalizedActivityData);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            var error = await response.Content.ReadAsStringAsync();
-            throw new Exception($"Failed to log activity: {error}");
-        }
+        return _userProfile;
     }
 
-    // Helper function to capitalize the first letter of a string
-    private string CapitalizeFirstLetter(string input)
+    // Logout method
+    public void Logout()
     {
-        if (string.IsNullOrEmpty(input))
-            return input;
-
-        return char.ToUpper(input[0]) + input.Substring(1);
+        _idToken = null;
+        _userId = null;
+        _userProfile = null;
     }
 
     // Response classes
@@ -165,5 +118,9 @@ public class FirebaseAuthService
     {
         public string FirstName { get; set; }
         public string LastName { get; set; }
+        public string Email { get; set; }
+        public string Birthdate { get; set; }
+        public string Sex { get; set; }
+        public string IdToken { get; set; }
     }
 }

@@ -12,7 +12,7 @@
 <div class="dashboard-page">
     <div class="dashcard">
         <div class="dashtitle">
-            <strong>Welcome, Admin {username}!</strong>
+            <strong>Welcome, Admin!</strong>
             <p>@displayedDate</p>
         </div>
         <div class="grid-container">
@@ -188,9 +188,6 @@
 
             // Sort notifications by the latest date at the top (again after insertion)
             notifications = notifications.OrderByDescending(n => ParseDateTime(n.Date, n.Time)).ToList();
-
-            // Refresh the UI
-            StateHasChanged();
         });
     }
 
