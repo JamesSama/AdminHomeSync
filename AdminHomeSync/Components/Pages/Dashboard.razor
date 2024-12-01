@@ -1,11 +1,16 @@
 ﻿@page "/dashboard"
 @using AdminHomeSync.Components.Services
+@using AdminHomeSync.Components.Model
 @using System.Globalization
 @inject IJSRuntime JS
 @inject IUserService UserService
 @inject DeviceService DeviceService
 @inject ActivityService ActivityService
 @inject NotificationService NotificationService
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager NavigationManager
+@inherits AuthenticatedPage
+@rendermode InteractiveServer
 
 <PageTitle>Dashboard</PageTitle>
 
@@ -38,8 +43,8 @@
                         }
                         else
                         {
-                            <div class="no-activity-container">
-                                <p>No recent activities to display...</p>
+                            <div class="message-load-container">
+                                <p>Lading recent activities...</p>
                             </div>
                         }
                     </div>
@@ -65,8 +70,8 @@
                         }
                         else
                         {
-                            <div class="no-notif-container">
-                                <p>No notifications to display...</p>
+                            <div class="message-load-container">
+                                <p>Loading notifications...</p>
                             </div>
                         }
                     </div>
@@ -107,75 +112,91 @@
     private string displayedDate = string.Empty;
     private string displayedTime = string.Empty;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (OperatingSystem.IsBrowser()) // WebAssembly (client-side)
+        if (firstRender)
         {
-            // Fetch client (browser) date and time via JavaScript
-            await JS.InvokeVoidAsync("getCurrentDateTime", DotNetObjectReference.Create(this));
-        }
-        else // Blazor Server (server-side)
-        {
-            // Fetch server date and time separately
-            var now = DateTime.Now;
-            displayedDate = now.ToString("MMMM d, yyyy"); // Date format: "Month Day, Year"
-            displayedTime = now.ToString("hh:mm tt"); // Time format: "hh:mm:ss AM/PM"
-        }
+            // Check if a session exists in local storage
+            var userProfile = await LocalStorage.GetItemAsync<UserData>("userProfile");
 
-        try
-        {
-            summation = await UserService.GetUserSummationAsync();
-        }
-        catch (Exception)
-        {
-            summation = null;
-        }
+            if (userProfile == null)
+            {
+                // If there's no active session, redirect to the login page
+                NavigationManager.NavigateTo("/", true); // true forces a full reload
+                return; // Prevent further execution
+            }
 
-        try
-        {
-            // Fetch recent activities from Firebase and sort by DateTime
-            activities = (await ActivityService.FetchActivitiesFromFirebase())
-            .OrderByDescending(a => a.DateTime)
-            .ToList();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error fetching activities: {ex.Message}");
-            activities = new List<UserActivity>();
-        }
+            // Proceed with the regular initialization of the dashboard
+            if (OperatingSystem.IsBrowser()) // WebAssembly (client-side)
+            {
+                // Fetch client (browser) date and time via JavaScript
+                await JS.InvokeVoidAsync("getCurrentDateTime", DotNetObjectReference.Create(this));
+            }
+            else // Blazor Server (server-side)
+            {
+                // Fetch server date and time separately
+                var now = DateTime.Now;
+                displayedDate = now.ToString("MMMM d, yyyy"); // Date format: "Month Day, Year"
+                displayedTime = now.ToString("hh:mm tt"); // Time format: "hh:mm:ss AM/PM"
+            }
 
-        try
-        {
-            // Fetch user devices
-            var userDevices = await DeviceService.GetDevicesDataAsync();
+            try
+            {
+                summation = await UserService.GetUserSummationAsync();
+            }
+            catch (Exception)
+            {
+                summation = null;
+            }
 
-            // Calculate summary counts
-            connectedDevicesCount = userDevices.Sum(d =>
-            (d.Lights.IsConnected ? 1 : 0) +
-            (d.Fan.IsConnected ? 1 : 0) +
-            (d.MotionSensor.IsConnected ? 1 : 0));
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error fetching user devices: {ex.Message}");
-            connectedDevicesCount = 0;
-        }
+            try
+            {
+                // Fetch recent activities from Firebase and sort by DateTime
+                activities = (await ActivityService.FetchActivitiesFromFirebase())
+                .OrderByDescending(a => a.DateTime)
+                .ToList();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching activities: {ex.Message}");
+                activities = new List<UserActivity>();
+            }
 
-        try
-        {
-            // Fetch all notifications initially
-            notifications = await NotificationService.GetAllNotificationsAsync();
+            try
+            {
+                // Fetch user devices
+                var userDevices = await DeviceService.GetDevicesDataAsync();
 
-            // Sort notifications by the latest date at the top
-            notifications = notifications.OrderByDescending(n => ParseDateTime(n.Date, n.Time)).ToList();
+                // Calculate summary counts
+                connectedDevicesCount = userDevices.Sum(d =>
+                (d.Lights.IsConnected ? 1 : 0) +
+                (d.Fan.IsConnected ? 1 : 0) +
+                (d.MotionSensor.IsConnected ? 1 : 0));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching user devices: {ex.Message}");
+                connectedDevicesCount = 0;
+            }
 
-            // Start listening for real-time updates
-            NotificationService.ListenForAllNotifications(OnNewNotification);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading notifications: {ex.Message}");
-            notifications = new List<NotificationService.NotificationItem>();
+            try
+            {
+                // Fetch all notifications initially
+                notifications = await NotificationService.GetAllNotificationsAsync();
+
+                // Sort notifications by the latest date at the top
+                notifications = notifications.OrderByDescending(n => ParseDateTime(n.Date, n.Time)).ToList();
+
+                // Start listening for real-time updates
+                NotificationService.ListenForAllNotifications(OnNewNotification);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading notifications: {ex.Message}");
+                notifications = new List<NotificationService.NotificationItem>();
+            }
+
+            StateHasChanged(); // Re-render the component if data is fetched
         }
     }
 

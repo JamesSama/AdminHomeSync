@@ -1,18 +1,21 @@
 ﻿@page "/profile"
-@inject FirebaseAuthService FirebaseAuthService
-@inject NavigationManager Navigation
+@inject FirebaseAuthService AuthService
+@inject NavigationManager NavigationManager
+@using AdminHomeSync.Components.Model
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
 @rendermode InteractiveServer
-
-<PageTitle>Profile</PageTitle>
+@inherits AuthenticatedPage
+@inject IJSRuntime JSRuntime
+@inject HttpClient HttpClient
 
 <div class="profile-page">
     <div class="profile-container">
         <p class="top-header">Profile</p>
         <div class="top-box">
             <div class="top-box-left">
-                @if (profile != null)
+                @if (userProfile != null)
                 {
-                    <p class="top-name">@profile.FirstName @profile.LastName</p>
+                    <p class="top-name">@userProfile.FirstName @userProfile.LastName</p>
                 }
                 else
                 {
@@ -37,9 +40,9 @@
                         <img src="icon/web-profile-birthdate.svg" alt="Birthdate Logo" class="birthdate-icon" />
                     </div>
                     <div class="text-content">
-                        @if (profile != null)
+                        @if (userProfile != null)
                         {
-                            <p class="top-text">@profile.Birthdate</p>
+                            <p class="top-text">@userProfile.Birthdate</p>
                         }
                         else
                         {
@@ -54,9 +57,9 @@
                         <img src="icon/web-profile-sex.svg" alt="Sex Logo" class="sex-icon" />
                     </div>
                     <div class="text-content">
-                        @if (profile != null)
+                        @if (userProfile != null)
                         {
-                            <p class="top-text">@profile.Sex</p>
+                            <p class="top-text">@userProfile.Sex</p>
                         }
                         else
                         {
@@ -71,9 +74,9 @@
                         <img src="icon/web-profile-email.svg" alt="Email Logo" class="email-icon" />
                     </div>
                     <div class="text-content">
-                        @if (profile != null)
+                        @if (userProfile != null)
                         {
-                            <p class="top-text">@profile.Email</p>
+                            <p class="top-text">@userProfile.Email</p>
                         }
                         else
                         {
@@ -84,74 +87,126 @@
                     </div>
                 </div>
             </div>
+            <button class="delete-account-button" @onclick="DeleteAccount">
+                Delete My Account
+            </button>
         </div>
     </div>
 </div>
 
 @code {
-    private UserData profile; // Profile data is initially null
-
-    // Define the UserData class used in Profile.razor
-    public class UserData
-    {
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string Birthdate { get; set; }
-        public string Sex { get; set; }
-        public string Email { get; set; }
-    }
-
-    private bool isNavigationRequired = false;
-
-    // This is called when the page initializes
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            var currentUser = FirebaseAuthService.GetCurrentUser();
-            if (currentUser == null)
-            {
-                isNavigationRequired = true;
-                return;
-            }
-
-            // Map data from FirebaseAuthService.UserData to Profile.UserData
-            profile = new UserData
-                {
-                    FirstName = currentUser.FirstName,
-                    LastName = currentUser.LastName,
-                    Birthdate = currentUser.Birthdate,
-                    Sex = currentUser.Sex,
-                    Email = currentUser.Email
-                };
-
-            StateHasChanged(); // Trigger a re-render to update the UI with the profile data
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error fetching profile: {ex.Message}");
-            isNavigationRequired = true;
-        }
-    }
+    private UserData userProfile;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && isNavigationRequired)
+        if (firstRender)
         {
             try
             {
-                Navigation.NavigateTo("/profile");
+                Console.WriteLine("Fetching user profile from localStorage...");
+                userProfile = await localStorage.GetItemAsync<UserData>("userProfile");
+
+                if (userProfile == null)
+                {
+                    Console.WriteLine("No user profile found in localStorage.");
+                }
+                else
+                {
+                    Console.WriteLine("User profile retrieved: " + userProfile.FirstName);
+                }
+
+                StateHasChanged();
             }
-            catch (NavigationException navEx)
+            catch (Exception ex)
             {
-                Console.WriteLine($"Navigation failed: {navEx.Message}");
+                Console.WriteLine($"Error retrieving user profile: {ex.Message}");
             }
         }
     }
 
-    private void Logout()
+    private async Task DeleteAccount()
     {
-        FirebaseAuthService.Logout();
-        Navigation.NavigateTo("/");
+        var confirmed = await JSRuntime.InvokeAsync<bool>("window.confirm", new object[] { "Are you sure you want to delete your account? This action cannot be undone." });
+
+        if (confirmed)
+        {
+            try
+            {
+                // Retrieve the user ID from localStorage
+                var userId = await localStorage.GetItemAsync<string>("userId");
+                if (userId == null)
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", new object[] { "User not found. Please log in again." });
+                    return;
+                }
+
+                var idToken = await localStorage.GetItemAsync<string>("authToken");
+
+                // Delete the user's authentication info
+                var deleteAuthResult = await AuthService.DeleteUserAccountAsync(idToken);
+                if (!deleteAuthResult)
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", new object[] { "Failed to delete user from Authentication. Please try again." });
+                    return;
+                }
+
+                // Delete the user's data from the database (including the users and activity node)
+                var deleteDbResult = await AuthService.DeleteUserDataFromDatabaseAsync(userId);
+                if (!deleteDbResult)
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", new object[] { "Failed to delete user from Database. Please try again." });
+                    return;
+                }
+
+                // Remove the user's profile and authentication token from localStorage
+                await localStorage.RemoveItemAsync("userProfile");
+                await localStorage.RemoveItemAsync("authToken");
+                await localStorage.RemoveItemAsync("userId");
+
+                // Log out the user (clear session data)
+                await Logout();
+
+                // Redirect to the login page
+                NavigationManager.NavigateTo("/", true);
+            }
+            catch (Exception ex)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", new object[] { $"An error occurred while deleting the account: {ex.Message}" });
+            }
+        }
+    }
+
+
+    private async Task Logout()
+    {
+        try
+        {
+            // Retrieve user details before clearing them
+            var userId = await localStorage.GetItemAsync<string>("userId");
+            var email = userProfile?.Email;
+            var firstName = userProfile?.FirstName;
+            var lastName = userProfile?.LastName;
+
+            if (userId != null && email != null && firstName != null && lastName != null)
+            {
+                // Call LogAdminLogoutActivityAsync in FirebaseAuthService
+                await AuthService.LogAdminLogoutActivityAsync(userId, email, firstName, lastName);
+            }
+
+            // Remove all related items from localStorage
+            await localStorage.RemoveItemAsync("userProfile");
+            await localStorage.RemoveItemAsync("authToken");
+            await localStorage.RemoveItemAsync("userId");
+
+            userProfile = null;
+
+            // Redirect to the login page
+            NavigationManager.NavigateTo("/", true);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error during logout: {ex.Message}");
+        }
     }
 }
+

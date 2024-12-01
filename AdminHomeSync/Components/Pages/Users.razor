@@ -1,8 +1,11 @@
 ﻿@page "/users"
 @using AdminHomeSync.Components.Services
+@using AdminHomeSync.Components.Model
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject IUserService UserService
 @inject IJSRuntime JSRuntime
 @rendermode InteractiveServer
+@inherits AuthenticatedPage
 
 <PageTitle>Users</PageTitle>
 
@@ -72,7 +75,26 @@
     private string roleFilter = "all"; // Default to "all", show all users
     private Dictionary<string?, string> latestLoginDictionary = new Dictionary<string, string>();
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Check if a session exists in local storage
+            var userProfile = await LocalStorage.GetItemAsync<UserData>("userProfile");
+
+            if (userProfile == null)
+            {
+                // If there's no active session, redirect to the login page
+                NavigationManager.NavigateTo("/", true); // true forces a full reload
+                return; // Prevent further execution
+            }
+
+            // Proceed with the regular initialization of the users page
+            await InitializeUsersAsync();
+        }
+    }
+
+    private async Task InitializeUsersAsync()
     {
         // Load all users when the page is initialized
         users = await UserService.GetUsersAsync();
@@ -84,6 +106,8 @@
             var latestLogin = await UserService.GetLatestLoginForUserAsync(user.UserId);
             latestLoginDictionary[user.UserId] = latestLogin;
         }
+
+        StateHasChanged(); // Re-render the component with loaded data
     }
 
     private async Task OnSearchInput(ChangeEventArgs e)
@@ -157,3 +181,4 @@
         }
     }
 }
+

@@ -83,13 +83,21 @@
         ErrorMessage = string.Empty;
         SignUpSuccess = false;
 
-        // Validate input fields (already implemented)
+        // Simple field validation (ensure all fields are filled in)
+        if (string.IsNullOrWhiteSpace(FirstName) || string.IsNullOrWhiteSpace(LastName) ||
+            string.IsNullOrWhiteSpace(Sex) || Birthdate == DateTime.MinValue ||
+            string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
+        {
+            ErrorMessage = "Please fill in all required fields.";
+            return;
+        }
 
         try
         {
             // Call Firebase Authentication service for sign-up
-            var response = await AuthService.SignUpAsync(Email, Password);
+            var response = await AuthService.SignUpAsync(Email, Password, FirstName, LastName, Sex);
 
+            // Format the birthdate
             string formattedBirthdate = Birthdate.ToString("MMMM dd, yyyy");
 
             // Prepare user data to store in Realtime Database
@@ -99,12 +107,12 @@
                 Email,
                 FirstName,
                 LastName,
-                Role = "Admin",
+                Role = "Admin",  // Default role for new users
                 Sex,
                 UserId = response.LocalId
             };
 
-            // Append to the database
+            // Add user data to Firebase Realtime Database
             await AuthService.AddUserToDatabaseAsync(response.LocalId, userData, response.IdToken);
 
             // Indicate success
@@ -112,10 +120,11 @@
 
             // Redirect to the login page after a short delay
             await Task.Delay(2000);
-            Navigation.NavigateTo("/");
+            Navigation.NavigateTo("/"); // Redirect to login page after successful sign-up
         }
         catch (Exception ex)
         {
+            // Handle specific error messages from Firebase
             if (ex.Message.Contains("EMAIL_EXISTS"))
             {
                 ErrorMessage = "This email address is already registered. Please use a different email.";

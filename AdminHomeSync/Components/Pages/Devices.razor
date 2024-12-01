@@ -1,7 +1,10 @@
 @page "/devices"
 @using AdminHomeSync.Components.Services
-
+@using AdminHomeSync.Components.Model
 @inject DeviceService DeviceService
+@inherits AuthenticatedPage
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@rendermode InteractiveServer
 
 <PageTitle>Devices</PageTitle>
 
@@ -81,7 +84,26 @@
     private int arduinoDevicesCount;
     private string ErrorMessage;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Check if a session exists in local storage
+            var userProfile = await LocalStorage.GetItemAsync<UserData>("userProfile");
+
+            if (userProfile == null)
+            {
+                // If there's no active session, redirect to the login page
+                NavigationManager.NavigateTo("/", true); // true forces a full reload
+                return; // Prevent further execution
+            }
+
+            // Proceed with the regular initialization of the devices page
+            await InitializeDevicesAsync();
+        }
+    }
+
+    private async Task InitializeDevicesAsync()
     {
         try
         {
@@ -99,5 +121,7 @@
             Console.WriteLine($"Error loading device data: {ex.Message}");
             ErrorMessage = "Something went wrong while loading the devices. Please try again later.";
         }
+
+        StateHasChanged(); // Re-render the component with loaded data
     }
 }

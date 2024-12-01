@@ -1,6 +1,10 @@
 @page "/activity"
 @using AdminHomeSync.Components.Services
+@using AdminHomeSync.Components.Model
 @inject ActivityService ActivityService
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inherits AuthenticatedPage
+@rendermode InteractiveServer
 
 <PageTitle>Activity</PageTitle>
 
@@ -62,19 +66,40 @@
     private List<UserActivity> activities = new List<UserActivity>();
     private string ErrorMessage;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Check if a session exists in local storage
+            var userProfile = await LocalStorage.GetItemAsync<UserData>("userProfile");
+
+            if (userProfile == null)
+            {
+                // If there's no active session, redirect to the login page
+                NavigationManager.NavigateTo("/", true); // true forces a full reload
+                return; // Prevent further execution
+            }
+
+            // Proceed with the regular initialization of the activity page
+            await InitializeActivitiesAsync();
+        }
+    }
+
+    private async Task InitializeActivitiesAsync()
     {
         try
         {
             // Fetch activities from the ActivityService
             activities = (await ActivityService.FetchActivitiesFromFirebase())
-            .OrderByDescending(a => a.DateTime)
-            .ToList();
+                .OrderByDescending(a => a.DateTime)
+                .ToList();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading activities: {ex.Message}");
             ErrorMessage = "Something went wrong while loading the activities. Please try again later.";
         }
+
+        StateHasChanged(); // Re-render the component with loaded data
     }
 }

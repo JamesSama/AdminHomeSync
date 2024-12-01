@@ -1,7 +1,11 @@
 ﻿@page "/notification"
 @using AdminHomeSync.Components.Services
+@using AdminHomeSync.Components.Model
 @using System.Globalization
 @inject NotificationService NotificationService
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inherits AuthenticatedPage
+@rendermode InteractiveServer
 
 <PageTitle>Notifications</PageTitle>
 
@@ -47,7 +51,26 @@
         return DateTime.MinValue;
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Check if a session exists in local storage
+            var userProfile = await LocalStorage.GetItemAsync<UserData>("userProfile");
+
+            if (userProfile == null)
+            {
+                // If there's no active session, redirect to the login page
+                NavigationManager.NavigateTo("/", true); // true forces a full reload
+                return; // Prevent further execution
+            }
+
+            // Proceed with the regular initialization of the notifications page
+            await InitializeNotificationsAsync();
+        }
+    }
+
+    private async Task InitializeNotificationsAsync()
     {
         try
         {
