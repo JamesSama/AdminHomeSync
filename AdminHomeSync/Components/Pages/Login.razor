@@ -23,15 +23,33 @@
         <img src="images/login-illustration 1.png" alt="Decorative Light" class="decorative-light">
         <div class="login-form-container">
             <h1>Login</h1>
+
             <form @onsubmit="HandleLogin">
                 <div class="input-group">
                     <input type="email" @bind="Email" placeholder="Email" required />
-                    <span class="input-icon email-icon"></span>
+                    <span class="input-icon">
+                       <img src="icon/email.svg" alt="Email-Icon" class="icon" />
+                    </span>
                 </div>
                 <div class="input-group">
-                    <input type="password" @bind="Password" placeholder="Password" required />
-                    <span class="input-icon password-icon"></span>
+                    <input type="@PasswordFieldType"
+                           @bind="Password"
+                           placeholder="Password"
+                           required />
+                    <span class="input-icon"
+                          @onclick="TogglePasswordVisibility"
+                          style="cursor: pointer;">
+                        @if (IsPasswordVisible)
+                        {
+                            <img src="icon/eye-off.svg" alt="Hide Password" class="icon-pass" />
+                        }
+                        else
+                        {
+                            <img src="icon/eye-on.svg" alt="Show Password" class="icon-pass" />
+                        }
+                    </span>
                 </div>
+
                 <button type="submit" class="login-button">Login</button>
 
                 <div class="divider-container">
@@ -39,8 +57,9 @@
                     <span class="divider">or</span>
                     <span class="line"></span>
                 </div>
-                <button type="button" class="create-account-button" @onclick="NavigateToSignup">Create an
-                    account</button>
+                <button type="button" class="create-account-button" @onclick="NavigateToSignup">
+                    Create an account
+                </button>
             </form>
 
             @if (!string.IsNullOrEmpty(ErrorMessage))
@@ -55,70 +74,52 @@
     private string Email { get; set; }
     private string Password { get; set; }
     private string ErrorMessage { get; set; }
+    private bool IsPasswordVisible { get; set; } = false;
+
+    // Dynamically determines the password field type based on visibility
+    private string PasswordFieldType => IsPasswordVisible ? "text" : "password";
 
     private async Task HandleLogin()
     {
-        // Clear previous error message
         ErrorMessage = string.Empty;
 
         try
         {
-            // Attempt to sign in with email and password
             var response = await AuthService.SignInWithEmailAndPasswordAsync(Email, Password);
-
-            // Log the successful login
             Console.WriteLine($"Login successful! Token: {response.IdToken}");
 
-            // Navigate to dashboard or other page after successful login
             Navigation.NavigateTo("/dashboard");
         }
         catch (FirebaseAuthException firebaseEx)
         {
-            // Log the exception details for debugging purposes
-            Console.WriteLine($"FirebaseAuthException caught: {firebaseEx.Message}");
-            Console.WriteLine($"Stack Trace: {firebaseEx.StackTrace}");
-
-            // Firebase may return a generic message but include specific error codes
-            if (firebaseEx.Message.Contains("INVALID_EMAIL"))
-            {
-                ErrorMessage = "The email address is invalid. Please check the format.";
-                Console.WriteLine("Error: Invalid email format.");
-            }
-            else if (firebaseEx.Message.Contains("USER_NOT_FOUND"))
-            {
-                ErrorMessage = "No account found with this email. Please check your email address.";
-                Console.WriteLine("Error: No account found with the provided email.");
-            }
-            else if (firebaseEx.Message.Contains("WRONG_PASSWORD"))
-            {
-                ErrorMessage = "Incorrect password. Please try again.";
-                Console.WriteLine("Error: Incorrect password.");
-            }
-            else if (firebaseEx.Message.Contains("USER_DISABLED"))
-            {
-                ErrorMessage = "This account has been disabled. Please contact support.";
-                Console.WriteLine("Error: Account is disabled.");
-            }
-            else
-            {
-                // Generic error message for all other cases
-                ErrorMessage = "Login failed. Please check your credentials and try again.";
-                Console.WriteLine($"Error: Login failed with message: {firebaseEx.Message}");
-            }
+            ErrorMessage = firebaseEx.Message.Contains("INVALID_EMAIL") ?
+                           "Invalid email format." :
+                           firebaseEx.Message.Contains("USER_NOT_FOUND") ?
+                           "No account found with this email." :
+                           firebaseEx.Message.Contains("WRONG_PASSWORD") ?
+                           "Incorrect password." :
+                           firebaseEx.Message.Contains("USER_DISABLED") ?
+                           "This account has been disabled." :
+                           "Login failed. Please try again.";
         }
         catch (Exception ex)
         {
-            // Handle any other non-Firebase related errors
             ErrorMessage = "Invalid Credentials. Please try again.";
-            Console.WriteLine($"General Exception caught: {ex.Message}");
-            Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-            StateHasChanged(); // Ensure UI updates
+            Console.WriteLine($"Exception caught: {ex.Message}");
+        }
+        finally
+        {
+            StateHasChanged();
         }
     }
 
     private void NavigateToSignup()
     {
-        // Navigate to the signup page if the user clicks "Create an account"
         Navigation.NavigateTo("/signup");
+    }
+
+    private void TogglePasswordVisibility()
+    {
+        IsPasswordVisible = !IsPasswordVisible;
     }
 }

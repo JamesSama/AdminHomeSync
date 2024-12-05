@@ -123,19 +123,17 @@
     border-radius: 25px !important;
 }
 
-.input-icon {
+.input-icon img.icon, img.icon-pass {
     position: absolute;
     right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 20px;
-    height: 20px;
-    background-size: contain;
-    background-repeat: no-repeat;
+    top: 35px;
+    width: 25px;
+    height: 25px;
 }
 
-.email-icon {
-    background-image: url('images/email 2.png');
+.icon-pass:hover {
+    background-color: #acacacac;
+    border-radius: 5px;
 }
 
 .create-account-button {

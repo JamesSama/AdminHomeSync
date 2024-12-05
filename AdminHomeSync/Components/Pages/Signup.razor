@@ -45,11 +45,31 @@
                 </div>
                 <div class="input-group">
                     <label for="email">Email Address</label>
-                    <input type="email" id="email" @bind="Email" placeholder="Email Address" required>
+                    <input type="email" id="email" @bind="Email" placeholder="Email Address" required />
+                    <span class="input-icon">
+                        <img src="icon/email.svg" alt="Email-Icon" class="icon" />
+                    </span>
                 </div>
                 <div class="input-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" @bind="Password" placeholder="Password" required>
+
+                    <input type="@PasswordFieldType" 
+                           id="password" 
+                           @bind="Password" 
+                           placeholder="Password" required />
+                    <span class="input-icon"
+                          @onclick="TogglePasswordVisibility"
+                          style="cursor: pointer;">
+                        @if (IsPasswordVisible)
+                        {
+                            <img src="icon/eye-off.svg" alt="Hide Password" class="icon-pass" />
+                        }
+                        else
+                        {
+                            <img src="icon/eye-on.svg" alt="Show Password" class="icon-pass" />
+                        }
+                    </span>
+
                 </div>
                 <button type="submit" class="create-account-button">Create Account</button>
             </form>
@@ -77,6 +97,10 @@
     private string Password { get; set; }
     private string ErrorMessage { get; set; }
     private bool SignUpSuccess { get; set; } = false;
+    private bool IsPasswordVisible { get; set; } = false;
+
+    // Dynamically determines the password field type based on visibility
+    private string PasswordFieldType => IsPasswordVisible ? "text" : "password";
 
     private async Task HandleSignUp()
     {
@@ -134,5 +158,10 @@
                 ErrorMessage = $"Sign-up failed: {ex.Message}";
             }
         }
+    }
+
+    private void TogglePasswordVisibility()
+    {
+        IsPasswordVisible = !IsPasswordVisible;
     }
 }

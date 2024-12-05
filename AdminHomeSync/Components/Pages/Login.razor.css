@@ -123,24 +123,19 @@ form {
     border-radius: 20px !important;
 }
 
-.input-icon {
+.input-icon img.icon, img.icon-pass {
     position: absolute;
     right: 20px;
-    top: 50%;
-    transform: translateY(-30%);
-    width: 20px;
-    height: 20px;
-    background-size: contain;
-    background-repeat: no-repeat;
+    top: 10px;
+    width: 25px;
+    height: 25px;
 }
 
-.email-icon {
-    background-image: url('images/email 2.png');
+.icon-pass:hover {
+    background-color: #acacacac;
+    border-radius: 5px;
 }
 
-.password-icon {
-    background-image: url('images/password-hide 2.png');
-}
 
 .login-button {
     width: 100%;
