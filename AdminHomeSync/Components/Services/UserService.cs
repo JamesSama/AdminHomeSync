@@ -209,7 +209,7 @@ namespace AdminHomeSync.Components.Services
                     string activityUserId = activity.UserId;
 
                     // Ensure the action is "User logged in" and the userId matches
-                    if (action == "User logged in" && activityUserId == userId)
+                    if ((action == "User logged in" || action == "Admin Logged In") && activityUserId == userId)
                     {
                         // Trim any extra whitespace from the date and time
                         date = date.Trim();
